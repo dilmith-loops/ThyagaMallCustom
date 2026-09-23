@@ -9,6 +9,8 @@ import {
   Package,
   Zap,
   ShoppingBag,
+  Users,
+  Activity,
   LogOut,
   ExternalLink,
   ShieldCheck,
@@ -23,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const [adminUser, setAdminUser] = useState<Admin | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const isLoginPage = pathname === '/thyaga-portal-admin/login';
 
   useEffect(() => {
@@ -48,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = () => {
     localStorage.removeItem('thyaga_admin_token');
     localStorage.removeItem('thyaga_admin_user');
+    setShowLogoutModal(false);
     router.push('/thyaga-portal-admin/login');
   };
 
@@ -60,6 +64,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Products', href: '/thyaga-portal-admin/products', icon: Package },
     { label: 'Flash Sales', href: '/thyaga-portal-admin/flash-sales', icon: Zap, badge: 'HOT' },
     { label: 'Orders', href: '/thyaga-portal-admin/orders', icon: ShoppingBag },
+    { label: 'Users', href: '/thyaga-portal-admin/users', icon: Users },
+    { label: 'Activity Logs', href: '/thyaga-portal-admin/activity-logs', icon: Activity },
   ];
 
   return (
@@ -105,9 +111,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="hidden sm:inline">{adminUser?.name || 'Administrator'}</span>
           </div>
 
-          {/* Logout */}
+          {/* Logout Button */}
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogoutModal(true)}
             className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
             title="Log out"
           >
@@ -167,6 +173,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-gray-900">Confirm Sign Out</h3>
+                <p className="text-xs text-gray-500">End your administrative session</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Are you sure you want to log out of Thyaga Mall Admin Portal? You will need to sign in again to access store management.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

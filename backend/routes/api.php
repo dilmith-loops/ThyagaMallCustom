@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminActivityLogController;
 use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminFlashSaleController;
 use App\Http\Controllers\Api\Admin\AdminOrderController;
 use App\Http\Controllers\Api\Admin\AdminProductController;
+use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\FlashSaleController;
 use App\Http\Controllers\Api\OrderController;
@@ -62,4 +64,13 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index']);
     Route::get('/orders/{id}', [AdminOrderController::class, 'show']);
     Route::put('/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
+
+    // Users Management
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::post('/users', [AdminUserController::class, 'store']);
+    Route::put('/users/{id}', [AdminUserController::class, 'update']);
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+
+    // Activity Logs
+    Route::get('/activity-logs', [AdminActivityLogController::class, 'index']);
 });

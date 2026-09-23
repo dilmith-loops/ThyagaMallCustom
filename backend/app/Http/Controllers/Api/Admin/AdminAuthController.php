@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Admin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,15 @@ class AdminAuthController extends Controller
         $admin->update(['last_login_at' => now()]);
         $token = $admin->createToken('admin-token', ['admin'])->plainTextToken;
 
+        ActivityLog::record(
+            'LOGIN',
+            "Administrator {$admin->name} signed into the admin portal",
+            'Auth',
+            $admin->id,
+            $admin,
+            $request
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Admin authenticated successfully',
@@ -54,7 +64,18 @@ class AdminAuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $admin = $request->user();
+        if ($admin) {
+            ActivityLog::record(
+                'LOGOUT',
+                "Administrator {$admin->name} logged out of session",
+                'Auth',
+                $admin->id,
+                $admin,
+                $request
+            );
+            $admin->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'success' => true,

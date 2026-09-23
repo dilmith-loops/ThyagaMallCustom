@@ -130,3 +130,28 @@ export interface Admin {
   role: string;
   avatar: string | null;
 }
+
+export interface ManagedUser {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: 'customer' | 'super_admin' | 'manager' | 'editor';
+  status: 'active' | 'suspended' | 'inactive';
+  last_login_at?: string | null;
+  created_at: string;
+  orders_count?: number;
+}
+
+export interface ActivityLogItem {
+  id: number;
+  admin_id?: number | null;
+  admin_name: string;
+  action: string;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  description: string;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  created_at: string;
+}

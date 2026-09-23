@@ -4,6 +4,8 @@ import {
   FlashSale,
   Order,
   Admin,
+  ManagedUser,
+  ActivityLogItem,
 } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -303,6 +305,108 @@ export const api = {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ order_status: status }),
+    });
+  },
+
+  async getAdminUsers(token: string, params: {
+    page?: number;
+    role?: string;
+    status?: string;
+    search?: string;
+  } = {}): Promise<{
+    success: boolean;
+    data: ManagedUser[];
+    stats: {
+      total_users: number;
+      total_admins: number;
+      total_customers: number;
+      active_users: number;
+    };
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    if (params.role) query.append('role', params.role);
+    if (params.status) query.append('status', params.status);
+    if (params.search) query.append('search', params.search);
+
+    const qs = query.toString();
+    return fetcher(`/admin/users${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async createAdminUser(token: string, data: {
+    name: string;
+    email: string;
+    phone?: string;
+    role: string;
+    status: string;
+    password?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: ManagedUser;
+  }> {
+    return fetcher('/admin/users', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateAdminUser(token: string, id: number, data: Partial<ManagedUser> & { password?: string }): Promise<{
+    success: boolean;
+    message: string;
+    data: ManagedUser;
+  }> {
+    return fetcher(`/admin/users/${id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAdminUser(token: string, id: number): Promise<{ success: boolean; message: string }> {
+    return fetcher(`/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async getAdminActivityLogs(token: string, params: {
+    page?: number;
+    action?: string;
+    search?: string;
+  } = {}): Promise<{
+    success: boolean;
+    data: ActivityLogItem[];
+    stats: {
+      total_activities: number;
+      today_activities: number;
+      unique_admins: number;
+      auth_events: number;
+    };
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    if (params.action) query.append('action', params.action);
+    if (params.search) query.append('search', params.search);
+
+    const qs = query.toString();
+    return fetcher(`/admin/activity-logs${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 };

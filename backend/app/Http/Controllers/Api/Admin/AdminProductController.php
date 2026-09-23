@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\JsonResponse;
@@ -86,6 +87,15 @@ class AdminProductController extends Controller
             ]);
         }
 
+        ActivityLog::record(
+            'CREATE_PRODUCT',
+            "Created product '{$product->name}' (SKU: {$product->sku}, Price: Rs. {$product->regular_price})",
+            'Product',
+            $product->id,
+            $request->user(),
+            $request
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
@@ -126,6 +136,15 @@ class AdminProductController extends Controller
             }
         }
 
+        ActivityLog::record(
+            'UPDATE_PRODUCT',
+            "Updated product '{$product->name}' specifications and pricing",
+            'Product',
+            $product->id,
+            $request->user(),
+            $request
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully',
@@ -133,10 +152,20 @@ class AdminProductController extends Controller
         ]);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $product = Product::findOrFail($id);
+        $productName = $product->name;
         $product->delete();
+
+        ActivityLog::record(
+            'DELETE_PRODUCT',
+            "Deleted product '{$productName}'",
+            'Product',
+            $id,
+            $request->user(),
+            $request
+        );
 
         return response()->json([
             'success' => true,

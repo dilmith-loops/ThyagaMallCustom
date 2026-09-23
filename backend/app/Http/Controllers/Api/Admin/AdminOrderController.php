@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,15 @@ class AdminOrderController extends Controller
         ]);
 
         $order->update($validated);
+
+        ActivityLog::record(
+            'UPDATE_ORDER',
+            "Updated Order #{$order->order_number} fulfillment status to " . strtoupper($order->order_status),
+            'Order',
+            $order->id,
+            $request->user(),
+            $request
+        );
 
         return response()->json([
             'success' => true,
