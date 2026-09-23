@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary: #36135d;
+    --primary-dark: #250b42;
+    --primary-light: #522485;
+    --secondary: #a7144c;
+    --secondary-hover: #8c0f3f;
+    --flash: #dc2626;
+    --flash-bg: #fee2e2;
+    --bg-page: #f8f9fa;
+    --bg-surface: #ffffff;
+    --border: #e5e7eb;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-poppins), var(--font-inter), sans-serif;
+  }
+}
+
+/* Custom scrollbars for clean retail look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation utilities */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
