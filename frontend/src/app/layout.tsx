@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import StorefrontShell from '@/components/layout/StorefrontShell';
 
@@ -33,11 +34,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#f8f9fa] text-gray-900 font-sans">
-        <CartProvider>
-          <StorefrontShell>
-            {children}
-          </StorefrontShell>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <StorefrontShell>
+              {children}
+            </StorefrontShell>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

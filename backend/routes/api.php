@@ -12,9 +12,23 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\FlashSaleController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Public Customer Authentication
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [CustomerAuthController::class, 'register']);
+    Route::post('/login', [CustomerAuthController::class, 'login']);
+});
+
+// Authenticated Customer Endpoints
+Route::middleware(['auth:sanctum'])->prefix('user')->group(function () {
+    Route::get('/me', [CustomerAuthController::class, 'me']);
+    Route::get('/orders', [CustomerAuthController::class, 'orders']);
+    Route::post('/logout', [CustomerAuthController::class, 'logout']);
+});
 
 // Public Storefront Endpoints
 Route::prefix('categories')->group(function () {

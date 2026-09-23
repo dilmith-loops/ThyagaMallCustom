@@ -4,14 +4,16 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingBag, Heart, User, ChevronDown } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, ChevronDown, Package, LogOut } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { Category } from '@/types';
 
 export default function Header() {
   const router = useRouter();
   const { cartCount, openDrawer } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -89,16 +91,64 @@ export default function Header() {
         {/* Right Navigation Icons */}
         <div className="flex items-center gap-5 md:gap-7 shrink-0 text-gray-700">
           {/* Sign In / Account */}
-          <Link
-            href="/shop"
-            className="flex items-center gap-2 hover:text-[#36135d] transition group"
-          >
-            <User className="w-5 h-5 text-gray-700 group-hover:text-[#36135d] transition" />
-            <div className="hidden lg:flex flex-col text-left leading-tight">
-              <span className="text-[10px] text-gray-400">Sign In</span>
-              <span className="text-xs font-bold text-gray-800 group-hover:text-[#36135d]">Account</span>
+          {isAuthenticated && user ? (
+            <div className="relative group py-2">
+              <Link
+                href="/account"
+                className="flex items-center gap-2 hover:text-[#36135d] transition"
+              >
+                <div className="w-8 h-8 rounded-full bg-purple-100 border border-purple-200 text-[#36135d] font-bold text-xs flex items-center justify-center shrink-0">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="hidden lg:flex flex-col text-left leading-tight">
+                  <span className="text-[10px] text-gray-400">Hi, {user.name.split(' ')[0]}</span>
+                  <span className="text-xs font-bold text-gray-800 group-hover:text-[#36135d] flex items-center gap-0.5">
+                    My Account <ChevronDown className="w-3 h-3 text-gray-400" />
+                  </span>
+                </div>
+              </Link>
+
+              {/* Dropdown Menu on Hover */}
+              <div className="absolute right-0 top-full -mt-1 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 hidden group-hover:block z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-xs font-bold text-gray-900 truncate">{user.name}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
+                </div>
+                <Link
+                  href="/account"
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-purple-50 hover:text-[#36135d] transition font-medium"
+                >
+                  <User className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Account Dashboard</span>
+                </Link>
+                <Link
+                  href="/account"
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-purple-50 hover:text-[#36135d] transition font-medium"
+                >
+                  <Package className="w-3.5 h-3.5 text-gray-400" />
+                  <span>My Orders</span>
+                </Link>
+                <button
+                  onClick={() => logout()}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition border-t border-gray-100 cursor-pointer text-left font-medium"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
-          </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 hover:text-[#36135d] transition group"
+            >
+              <User className="w-5 h-5 text-gray-700 group-hover:text-[#36135d] transition" />
+              <div className="hidden lg:flex flex-col text-left leading-tight">
+                <span className="text-[10px] text-gray-400">Sign In</span>
+                <span className="text-xs font-bold text-gray-800 group-hover:text-[#36135d]">Account</span>
+              </div>
+            </Link>
+          )}
 
           {/* Wishlist */}
           <Link

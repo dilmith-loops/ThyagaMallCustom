@@ -74,9 +74,16 @@ class OrderController extends Controller
             $total = max(0, ($subtotal - $discount) + $shippingFee);
             $orderNumber = 'THY-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
+            $userId = auth('sanctum')->id();
+            if (!$userId) {
+                $userId = \App\Models\User::where('email', strtolower(trim($validated['customer_email'])))
+                    ->where('role', 'customer')
+                    ->value('id');
+            }
+
             $order = Order::create([
                 'order_number' => $orderNumber,
-                'user_id' => auth('sanctum')->id() ?? null,
+                'user_id' => $userId,
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $validated['customer_email'],
                 'customer_phone' => $validated['customer_phone'],

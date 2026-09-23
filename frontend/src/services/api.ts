@@ -6,6 +6,8 @@ import {
   Admin,
   ManagedUser,
   ActivityLogItem,
+  CustomerAuthUser,
+  CustomerAuthResponse,
 } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -34,6 +36,57 @@ async function fetcher<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 // Public API
 export const api = {
+  // Customer Authentication APIs
+  async customerRegister(data: {
+    name: string;
+    email: string;
+    phone?: string;
+    password: string;
+    password_confirmation: string;
+  }): Promise<CustomerAuthResponse> {
+    return fetcher('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async customerLogin(data: {
+    email: string;
+    password: string;
+  }): Promise<CustomerAuthResponse> {
+    return fetcher('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async customerGetMe(token: string): Promise<{ success: boolean; user: CustomerAuthUser }> {
+    return fetcher('/user/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async customerGetOrders(token: string): Promise<{
+    success: boolean;
+    data: any[];
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {
+    return fetcher('/user/orders', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async customerLogout(token: string): Promise<{ success: boolean; message: string }> {
+    return fetcher('/user/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
   // Categories
   async getCategories(): Promise<{ success: boolean; data: Category[] }> {
     return fetcher('/categories');

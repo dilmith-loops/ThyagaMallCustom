@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
-import { ShieldCheck, Truck, CreditCard, Ticket, CheckCircle2, ChevronRight, Lock, Loader2 } from 'lucide-react';
+import { ShieldCheck, Truck, CreditCard, Ticket, CheckCircle2, ChevronRight, Lock, Loader2, User } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const {
     items,
     subtotal,
@@ -32,6 +34,17 @@ export default function CheckoutPage() {
     payment_method: 'cod',
     notes: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        customer_name: prev.customer_name || user.name || '',
+        customer_email: prev.customer_email || user.email || '',
+        customer_phone: prev.customer_phone || user.phone || '',
+      }));
+    }
+  }, [user]);
 
   const [voucherCodeInput, setVoucherCodeInput] = useState('');
   const [voucherMessage, setVoucherMessage] = useState<{ text: string; isError: boolean } | null>(null);
@@ -124,6 +137,30 @@ export default function CheckoutPage() {
               </h2>
               <span className="text-[11px] text-gray-400">All fields required</span>
             </div>
+
+            {user ? (
+              <div className="bg-purple-50 border border-purple-200/80 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs text-purple-900">
+                <div className="flex items-center gap-2 truncate">
+                  <User className="w-4 h-4 text-[#36135d] shrink-0" />
+                  <span className="truncate">
+                    Ordering as <strong className="font-bold">{user.name}</strong> ({user.email})
+                  </span>
+                </div>
+                <span className="text-[10px] bg-purple-200/70 text-[#36135d] font-bold px-2 py-0.5 rounded-full uppercase shrink-0">
+                  Autofilled
+                </span>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs text-gray-600">
+                <span>Already have a Thyaga account?</span>
+                <Link
+                  href="/login?redirect=/checkout"
+                  className="font-bold text-[#36135d] hover:text-[#a7144c] underline"
+                >
+                  Sign in
+                </Link>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

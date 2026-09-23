@@ -161,3 +161,22 @@ export interface ActivityLogItem {
   user_agent?: string | null;
   created_at: string;
 }
+
+export interface CustomerAuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: string;
+  status: string;
+  created_at?: string;
+  orders_count?: number;
+}
+
+export interface CustomerAuthResponse {
+  success: boolean;
+  message: string;
+  token: string;
+  user: CustomerAuthUser;
+}
+
