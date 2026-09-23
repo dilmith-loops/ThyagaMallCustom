@@ -2,12 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
-import TopBar from '@/components/layout/TopBar';
-import Header from '@/components/layout/Header';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/cart/CartDrawer';
-import Toast from '@/components/common/Toast';
+import StorefrontShell from '@/components/layout/StorefrontShell';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -39,15 +34,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${poppins.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#f8f9fa] text-gray-900 font-sans">
         <CartProvider>
-          <TopBar />
-          <Header />
-          <Navbar />
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-4 sm:py-6">
+          <StorefrontShell>
             {children}
-          </main>
-          <Footer />
-          <CartDrawer />
-          <Toast />
+          </StorefrontShell>
         </CartProvider>
       </body>
     </html>
