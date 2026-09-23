@@ -379,6 +379,78 @@ export const api = {
     });
   },
 
+  async getAdminStaff(token: string, params: {
+    page?: number;
+    role?: string;
+    status?: string;
+    search?: string;
+  } = {}): Promise<{
+    success: boolean;
+    data: Admin[];
+    stats: {
+      total_admins: number;
+      super_admins: number;
+      managers: number;
+      editors: number;
+      active_admins: number;
+    };
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    if (params.role) query.append('role', params.role);
+    if (params.status) query.append('status', params.status);
+    if (params.search) query.append('search', params.search);
+
+    const qs = query.toString();
+    return fetcher(`/admin/admins${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async createAdminStaff(token: string, data: {
+    name: string;
+    email: string;
+    phone?: string;
+    role: string;
+    status: string;
+    password?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: Admin;
+  }> {
+    return fetcher('/admin/admins', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateAdminStaff(token: string, id: number, data: Partial<Admin> & { password?: string }): Promise<{
+    success: boolean;
+    message: string;
+    data: Admin;
+  }> {
+    return fetcher(`/admin/admins/${id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAdminStaff(token: string, id: number): Promise<{ success: boolean; message: string }> {
+    return fetcher(`/admin/admins/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
   async getAdminActivityLogs(token: string, params: {
     page?: number;
     action?: string;

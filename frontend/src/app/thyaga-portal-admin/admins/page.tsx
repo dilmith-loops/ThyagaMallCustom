@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Users,
+  ShieldCheck,
+  ShieldAlert,
   UserPlus,
   Search,
-  ShoppingBag,
   CheckCircle2,
   AlertCircle,
   Edit2,
@@ -16,70 +16,69 @@ import {
   Mail,
   Phone,
   User as UserIcon,
+  Crown,
 } from 'lucide-react';
 import { api } from '@/services/api';
-import { CustomerUser } from '@/types';
+import { Admin } from '@/types';
 
-export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<CustomerUser[]>([]);
+export default function AdminStaffPage() {
+  const [admins, setAdmins] = useState<Admin[]>([]);
   const [stats, setStats] = useState({
-    total_customers: 0,
-    active_customers: 0,
-    total_orders: 0,
-    suspended_customers: 0,
+    total_admins: 0,
+    super_admins: 0,
+    managers: 0,
+    editors: 0,
+    active_admins: 0,
   });
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
+  const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<CustomerUser | null>(null);
-  const [deletingCustomer, setDeletingCustomer] = useState<CustomerUser | null>(null);
+  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [deletingAdmin, setDeletingAdmin] = useState<Admin | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state for Add Customer
+  // Form state for Add Admin
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    status: 'active' as CustomerUser['status'],
+    role: 'manager' as Admin['role'],
+    status: 'active' as Admin['status'],
     password: '',
   });
 
-  // Form state for Edit Customer
+  // Form state for Edit Admin
   const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    status: 'active' as CustomerUser['status'],
+    role: 'manager' as Admin['role'],
+    status: 'active' as Admin['status'],
     password: '',
   });
 
-  const fetchCustomers = async (page = 1) => {
+  const fetchAdmins = async (page = 1) => {
     const token = localStorage.getItem('thyaga_admin_token') || '';
     if (!token) return;
 
     setIsLoading(true);
     try {
-      const res = await api.getAdminUsers(token, {
+      const res = await api.getAdminStaff(token, {
         page,
+        role: selectedRole || undefined,
         status: selectedStatus || undefined,
         search: search || undefined,
       });
 
       if (res.success) {
-        setCustomers(res.data);
-        if (res.stats) {
-          setStats({
-            total_customers: res.stats.total_customers ?? 0,
-            active_customers: res.stats.active_users ?? 0,
-            total_orders: (res.stats as unknown as { total_orders?: number }).total_orders ?? 0,
-            suspended_customers: (res.stats as unknown as { suspended_customers?: number }).suspended_customers ?? 0,
-          });
-        }
+        setAdmins(res.data);
+        if (res.stats) setStats(res.stats);
         if (res.pagination) setPagination(res.pagination);
       }
     } catch {
@@ -90,12 +89,12 @@ export default function AdminCustomersPage() {
   };
 
   useEffect(() => {
-    fetchCustomers(1);
-  }, [selectedStatus]);
+    fetchAdmins(1);
+  }, [selectedRole, selectedStatus]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchCustomers(1);
+    fetchAdmins(1);
   };
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
@@ -103,96 +102,96 @@ export default function AdminCustomersPage() {
     setTimeout(() => setFeedback(null), 4000);
   };
 
-  const handleCreateCustomer = async (e: React.FormEvent) => {
+  const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('thyaga_admin_token') || '';
     if (!token) return;
 
     setIsSubmitting(true);
     try {
-      const res = await api.createAdminUser(token, {
-        ...formData,
-        role: 'customer',
-      });
+      const res = await api.createAdminStaff(token, formData);
       if (res.success) {
-        showFeedback('success', `Customer '${formData.name}' created successfully`);
+        showFeedback('success', `Administrator '${formData.name}' created successfully`);
         setIsAddModalOpen(false);
         setFormData({
           name: '',
           email: '',
           phone: '',
+          role: 'manager',
           status: 'active',
           password: '',
         });
-        fetchCustomers(1);
+        fetchAdmins(1);
       }
     } catch (err: unknown) {
-      showFeedback('error', err instanceof Error ? err.message : 'Could not create customer');
+      showFeedback('error', err instanceof Error ? err.message : 'Could not create administrator');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleUpdateCustomer = async (e: React.FormEvent) => {
+  const handleUpdateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingCustomer) return;
+    if (!editingAdmin) return;
     const token = localStorage.getItem('thyaga_admin_token') || '';
     if (!token) return;
 
     setIsSubmitting(true);
     try {
-      const payload: Partial<CustomerUser> & { password?: string } = {
+      const payload: Partial<Admin> & { password?: string } = {
         name: editFormData.name,
         email: editFormData.email,
         phone: editFormData.phone,
+        role: editFormData.role,
         status: editFormData.status,
       };
       if (editFormData.password.trim()) {
         payload.password = editFormData.password.trim();
       }
 
-      const res = await api.updateAdminUser(token, editingCustomer.id, payload);
+      const res = await api.updateAdminStaff(token, editingAdmin.id, payload);
       if (res.success) {
-        showFeedback('success', `Customer '${editFormData.name}' updated successfully`);
-        setEditingCustomer(null);
-        fetchCustomers(pagination.current_page);
+        showFeedback('success', `Administrator '${editFormData.name}' updated successfully`);
+        setEditingAdmin(null);
+        fetchAdmins(pagination.current_page);
       }
     } catch (err: unknown) {
-      showFeedback('error', err instanceof Error ? err.message : 'Could not update customer');
+      showFeedback('error', err instanceof Error ? err.message : 'Could not update administrator');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteCustomer = async () => {
-    if (!deletingCustomer) return;
+  const handleDeleteAdmin = async () => {
+    if (!deletingAdmin) return;
     const token = localStorage.getItem('thyaga_admin_token') || '';
     if (!token) return;
 
     setIsSubmitting(true);
     try {
-      const res = await api.deleteAdminUser(token, deletingCustomer.id);
+      const res = await api.deleteAdminStaff(token, deletingAdmin.id);
       if (res.success) {
-        showFeedback('success', `Customer '${deletingCustomer.name}' removed successfully`);
-        setDeletingCustomer(null);
-        fetchCustomers(pagination.current_page);
+        showFeedback('success', `Administrator '${deletingAdmin.name}' removed successfully`);
+        setDeletingAdmin(null);
+        fetchAdmins(pagination.current_page);
       } else {
-        showFeedback('error', res.message || 'Could not delete customer');
+        showFeedback('error', res.message || 'Could not delete administrator');
       }
     } catch (err: unknown) {
-      showFeedback('error', err instanceof Error ? err.message : 'Failed to delete customer');
+      showFeedback('error', err instanceof Error ? err.message : 'Failed to delete administrator');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const startEdit = (customer: CustomerUser) => {
-    setEditingCustomer(customer);
+  const startEdit = (admin: Admin) => {
+    setEditingAdmin(admin);
     setEditFormData({
-      name: customer.name,
-      email: customer.email,
-      phone: customer.phone || '',
-      status: customer.status,
+      name: admin.name,
+      email: admin.email,
+      phone: admin.phone || '',
+      role: admin.role,
+      status: admin.status || 'active',
       password: '',
     });
   };
@@ -203,10 +202,10 @@ export default function AdminCustomersPage() {
       <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
-            <span>Customer Management</span>
+            <span>Administrator & Staff Management</span>
           </h1>
           <p className="text-xs text-gray-500">
-            Monitor registered shoppers, contact profiles, and store purchase histories
+            Dedicated administrative access control, system roles, and store privileges
           </p>
         </div>
 
@@ -215,7 +214,7 @@ export default function AdminCustomersPage() {
           className="bg-[#36135d] hover:bg-[#a7144c] text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-sm transition flex items-center gap-2 cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
-          <span>Add Customer</span>
+          <span>Add Administrator</span>
         </button>
       </div>
 
@@ -240,13 +239,37 @@ export default function AdminCustomersPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#36135d] flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-              Total Customers
+              Total Staff
             </span>
-            <span className="text-lg font-black text-gray-900">{stats.total_customers}</span>
+            <span className="text-lg font-black text-gray-900">{stats.total_admins}</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#a7144c] flex items-center justify-center shrink-0">
+            <Crown className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              Super Admins
+            </span>
+            <span className="text-lg font-black text-[#a7144c]">{stats.super_admins}</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              Store Managers
+            </span>
+            <span className="text-lg font-black text-blue-600">{stats.managers}</span>
           </div>
         </div>
 
@@ -256,33 +279,9 @@ export default function AdminCustomersPage() {
           </div>
           <div>
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-              Active Accounts
+              Active Access
             </span>
-            <span className="text-lg font-black text-emerald-600">{stats.active_customers}</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <ShoppingBag className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-              Total Orders
-            </span>
-            <span className="text-lg font-black text-blue-600">{stats.total_orders}</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <AlertCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-              Suspended Accounts
-            </span>
-            <span className="text-lg font-black text-amber-600">{stats.suspended_customers}</span>
+            <span className="text-lg font-black text-emerald-600">{stats.active_admins}</span>
           </div>
         </div>
       </div>
@@ -292,7 +291,7 @@ export default function AdminCustomersPage() {
         <form onSubmit={handleSearch} className="flex-1 max-w-md flex gap-2">
           <input
             type="text"
-            placeholder="Search customers by name, email, or phone..."
+            placeholder="Search admins by name, email, or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-hidden focus:border-[#36135d]"
@@ -305,117 +304,158 @@ export default function AdminCustomersPage() {
           </button>
         </form>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Status:</span>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-3 py-2 focus:outline-hidden"
-          >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-            <option value="inactive">Inactive</option>
-          </select>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500">Role:</span>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-3 py-2 focus:outline-hidden"
+            >
+              <option value="">All Roles</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="manager">Store Manager</option>
+              <option value="editor">Content Editor</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500">Status:</span>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-3 py-2 focus:outline-hidden"
+            >
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Customers Table */}
+      {/* Administrators Table */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           {isLoading ? (
             <div className="p-16 flex flex-col items-center justify-center text-gray-400">
               <Loader2 className="w-8 h-8 animate-spin text-[#36135d] mb-2" />
-              <span className="text-xs font-semibold">Loading customers...</span>
+              <span className="text-xs font-semibold">Loading administrators...</span>
             </div>
-          ) : customers.length === 0 ? (
+          ) : admins.length === 0 ? (
             <div className="p-16 text-center text-xs text-gray-400">
-              No customer records found.
+              No administrator accounts found.
             </div>
           ) : (
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-[10px] border-b border-gray-100">
                 <tr>
-                  <th className="p-3">Customer Profile</th>
-                  <th className="p-3">Contact Details</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Orders Placed</th>
-                  <th className="p-3">Registration Date</th>
+                  <th className="p-3">Staff Profile</th>
+                  <th className="p-3">Email & Contact</th>
+                  <th className="p-3">Privilege Role</th>
+                  <th className="p-3">Access Status</th>
+                  <th className="p-3">Last Active</th>
                   <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {customers.map((c) => {
-                  const initials = c.name
-                    ? c.name
+                {admins.map((adm) => {
+                  const initials = adm.name
+                    ? adm.name
                         .split(' ')
                         .map((n) => n[0])
                         .slice(0, 2)
                         .join('')
                         .toUpperCase()
-                    : 'C';
+                    : 'A';
 
                   return (
-                    <tr key={c.id} className="hover:bg-gray-50/50 transition">
+                    <tr key={adm.id} className="hover:bg-gray-50/50 transition">
                       <td className="p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-purple-100 text-[#36135d] font-black text-xs flex items-center justify-center shrink-0">
                             {initials}
                           </div>
                           <div>
-                            <div className="font-bold text-gray-900">{c.name}</div>
-                            <div className="text-[10px] text-gray-400">Customer ID: #{c.id}</div>
+                            <div className="font-bold text-gray-900 flex items-center gap-1.5">
+                              <span>{adm.name}</span>
+                              {adm.role === 'super_admin' && (
+                                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                              )}
+                            </div>
+                            <div className="text-[10px] text-gray-400">Admin ID: #{adm.id}</div>
                           </div>
                         </div>
                       </td>
 
                       <td className="p-3">
-                        <div className="font-semibold text-gray-800">{c.email}</div>
-                        <div className="text-[10px] text-gray-400">{c.phone || 'No phone recorded'}</div>
+                        <div className="font-semibold text-gray-800">{adm.email}</div>
+                        <div className="text-[10px] text-gray-400">{adm.phone || 'No phone recorded'}</div>
+                      </td>
+
+                      <td className="p-3">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            adm.role === 'super_admin'
+                              ? 'bg-purple-100 text-[#36135d]'
+                              : adm.role === 'manager'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-cyan-100 text-cyan-800'
+                          }`}
+                        >
+                          {adm.role.replace('_', ' ')}
+                        </span>
                       </td>
 
                       <td className="p-3">
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                            c.status === 'active'
+                            adm.status === 'active' || !adm.status
                               ? 'bg-emerald-100 text-emerald-800'
-                              : c.status === 'suspended'
+                              : adm.status === 'suspended'
                               ? 'bg-red-100 text-red-800'
                               : 'bg-amber-100 text-amber-800'
                           }`}
                         >
-                          {c.status}
+                          {adm.status || 'active'}
                         </span>
                       </td>
 
-                      <td className="p-3">
-                        <span className="font-bold text-gray-900">{c.orders_count ?? 0} orders</span>
-                      </td>
-
                       <td className="p-3 text-[11px] text-gray-500">
-                        {new Date(c.created_at).toLocaleDateString([], {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {adm.last_login_at ? (
+                          <div>
+                            <span className="font-medium text-gray-700">Signed in</span>{' '}
+                            {new Date(adm.last_login_at).toLocaleDateString([], {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </div>
+                        ) : (
+                          <div>Never logged in</div>
+                        )}
                       </td>
 
                       <td className="p-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => startEdit(c)}
+                            onClick={() => startEdit(adm)}
                             className="p-1.5 text-gray-500 hover:text-[#36135d] hover:bg-purple-50 rounded-lg transition cursor-pointer"
-                            title="Edit customer"
+                            title="Edit administrator"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            onClick={() => setDeletingCustomer(c)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                            title="Delete customer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {adm.email !== 'admin@thyaga.lk' && (
+                            <button
+                              onClick={() => setDeletingAdmin(adm)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Delete administrator"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -435,14 +475,14 @@ export default function AdminCustomersPage() {
             <div className="flex gap-2">
               <button
                 disabled={pagination.current_page <= 1}
-                onClick={() => fetchCustomers(pagination.current_page - 1)}
+                onClick={() => fetchAdmins(pagination.current_page - 1)}
                 className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 rounded-lg font-bold transition"
               >
                 Previous
               </button>
               <button
                 disabled={pagination.current_page >= pagination.last_page}
-                onClick={() => fetchCustomers(pagination.current_page + 1)}
+                onClick={() => fetchAdmins(pagination.current_page + 1)}
                 className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 rounded-lg font-bold transition"
               >
                 Next
@@ -452,16 +492,16 @@ export default function AdminCustomersPage() {
         )}
       </div>
 
-      {/* Add Customer Modal */}
+      {/* Add Administrator Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#36135d] flex items-center justify-center">
-                  <UserPlus className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-black text-gray-900">Add New Customer</h3>
+                <h3 className="text-base font-black text-gray-900">Add Administrator</h3>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -471,13 +511,13 @@ export default function AdminCustomersPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateCustomer} className="space-y-3.5 text-xs">
+            <form onSubmit={handleCreateAdmin} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Nimal Perera"
+                  placeholder="e.g. Dilmith Loops"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:border-[#36135d]"
@@ -489,7 +529,7 @@ export default function AdminCustomersPage() {
                 <input
                   type="email"
                   required
-                  placeholder="nimal@gmail.com"
+                  placeholder="staff@thyaga.lk"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:border-[#36135d]"
@@ -500,26 +540,43 @@ export default function AdminCustomersPage() {
                 <label className="block font-bold text-gray-700 mb-1">Phone Number (Optional)</label>
                 <input
                   type="text"
-                  placeholder="077 123 4567"
+                  placeholder="+94 77 123 4567"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:border-[#36135d]"
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Account Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value as CustomerUser['status'] })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-hidden"
-                >
-                  <option value="active">Active</option>
-                  <option value="suspended">Suspended</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Privilege Role</label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value as Admin['role'] })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-hidden"
+                  >
+                    <option value="super_admin">Super Admin</option>
+                    <option value="manager">Store Manager</option>
+                    <option value="editor">Content Editor</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.value as Admin['status'] })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-hidden"
+                  >
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -552,7 +609,7 @@ export default function AdminCustomersPage() {
                   ) : (
                     <UserPlus className="w-3.5 h-3.5" />
                   )}
-                  <span>Create Customer</span>
+                  <span>Create Admin</span>
                 </button>
               </div>
             </form>
@@ -560,8 +617,8 @@ export default function AdminCustomersPage() {
         </div>
       )}
 
-      {/* Edit Customer Modal */}
-      {editingCustomer && (
+      {/* Edit Administrator Modal */}
+      {editingAdmin && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -569,17 +626,17 @@ export default function AdminCustomersPage() {
                 <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#36135d] flex items-center justify-center">
                   <Edit2 className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-black text-gray-900">Edit Customer Details</h3>
+                <h3 className="text-base font-black text-gray-900">Edit Administrator Details</h3>
               </div>
               <button
-                onClick={() => setEditingCustomer(null)}
+                onClick={() => setEditingAdmin(null)}
                 className="text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateCustomer} className="space-y-3.5 text-xs">
+            <form onSubmit={handleUpdateAdmin} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Full Name</label>
                 <input
@@ -606,34 +663,51 @@ export default function AdminCustomersPage() {
                 <label className="block font-bold text-gray-700 mb-1">Phone Number</label>
                 <input
                   type="text"
-                  placeholder="077 123 4567"
+                  placeholder="+94 77 123 4567"
                   value={editFormData.phone}
                   onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:border-[#36135d]"
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Account Status</label>
-                <select
-                  value={editFormData.status}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      status: e.target.value as CustomerUser['status'],
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-hidden"
-                >
-                  <option value="active">Active</option>
-                  <option value="suspended">Suspended</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Privilege Role</label>
+                  <select
+                    value={editFormData.role}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, role: e.target.value as Admin['role'] })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-hidden"
+                  >
+                    <option value="super_admin">Super Admin</option>
+                    <option value="manager">Store Manager</option>
+                    <option value="editor">Content Editor</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Status</label>
+                  <select
+                    value={editFormData.status}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        status: e.target.value as Admin['status'],
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-hidden"
+                  >
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
               </div>
 
               <div>
                 <label className="block font-bold text-gray-700 mb-1">
-                  Reset Password (Leave blank to keep existing)
+                  Change Password (Leave blank to keep existing)
                 </label>
                 <input
                   type="password"
@@ -647,7 +721,7 @@ export default function AdminCustomersPage() {
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => setEditingCustomer(null)}
+                  onClick={() => setEditingAdmin(null)}
                   className="px-4 py-2 font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
                 >
                   Cancel
@@ -670,8 +744,8 @@ export default function AdminCustomersPage() {
         </div>
       )}
 
-      {/* Delete Customer Modal */}
-      {deletingCustomer && (
+      {/* Delete Administrator Modal */}
+      {deletingAdmin && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
@@ -679,20 +753,21 @@ export default function AdminCustomersPage() {
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-black text-gray-900">Remove Customer</h3>
-                <p className="text-xs text-gray-500">Confirm customer account removal</p>
+                <h3 className="text-base font-black text-gray-900">Remove Administrator</h3>
+                <p className="text-xs text-gray-500">Revoke administrative access</p>
               </div>
             </div>
 
             <p className="text-xs text-gray-600 leading-relaxed">
-              Are you sure you want to delete customer{' '}
-              <strong className="text-gray-900">{deletingCustomer.name}</strong> ({deletingCustomer.email})?
+              Are you sure you want to remove administrator{' '}
+              <strong className="text-gray-900">{deletingAdmin.name}</strong> ({deletingAdmin.email})?
+              This will revoke all administrative login privileges.
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
               <button
                 type="button"
-                onClick={() => setDeletingCustomer(null)}
+                onClick={() => setDeletingAdmin(null)}
                 className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
               >
                 Cancel
@@ -700,11 +775,11 @@ export default function AdminCustomersPage() {
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={handleDeleteCustomer}
+                onClick={handleDeleteAdmin}
                 className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Delete Account</span>
+                <span>Revoke Access</span>
               </button>
             </div>
           </div>

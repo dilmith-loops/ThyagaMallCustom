@@ -127,21 +127,27 @@ export interface Admin {
   id: number;
   name: string;
   email: string;
-  role: string;
-  avatar: string | null;
+  phone?: string | null;
+  role: 'super_admin' | 'manager' | 'editor';
+  status: 'active' | 'suspended' | 'inactive';
+  avatar?: string | null;
+  last_login_at?: string | null;
+  created_at?: string;
 }
 
-export interface ManagedUser {
+export interface CustomerUser {
   id: number;
   name: string;
   email: string;
   phone?: string | null;
-  role: 'customer' | 'super_admin' | 'manager' | 'editor';
+  role: 'customer';
   status: 'active' | 'suspended' | 'inactive';
-  last_login_at?: string | null;
   created_at: string;
   orders_count?: number;
+  total_spent?: number;
 }
+
+export type ManagedUser = CustomerUser;
 
 export interface ActivityLogItem {
   id: number;
