@@ -90,7 +90,7 @@ export default function Header() {
         <div className="flex items-center gap-5 md:gap-7 shrink-0 text-gray-700">
           {/* Sign In / Account */}
           <Link
-            href="/admin/login"
+            href="/shop"
             className="flex items-center gap-2 hover:text-[#36135d] transition group"
           >
             <User className="w-5 h-5 text-gray-700 group-hover:text-[#36135d] transition" />

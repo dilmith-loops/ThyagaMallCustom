@@ -33,10 +33,15 @@ export default function TopBar() {
             <span>Help Center</span>
           </Link>
           <span className="text-purple-800">|</span>
-          <Link href="/admin/login" className="hover:text-white transition flex items-center gap-1">
+          <a
+            href="https://mall.thyaga.lk/sell-on-thyaga/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition flex items-center gap-1"
+          >
             <Store className="w-3 h-3 text-purple-400" />
             <span>Sell on Thayaga Mall</span>
-          </Link>
+          </a>
           <span className="text-purple-800">|</span>
           <div className="flex items-center gap-1.5 font-medium text-white cursor-pointer hover:text-purple-200">
             <span>🇱🇰 Sri Lanka | LKR</span>

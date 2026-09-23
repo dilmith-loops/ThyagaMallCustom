@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
       if (res.success && res.token) {
         localStorage.setItem('thyaga_admin_token', res.token);
         localStorage.setItem('thyaga_admin_user', JSON.stringify(res.admin));
-        router.push('/admin/dashboard');
+        router.push('/thyaga-portal-admin/dashboard');
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid admin credentials');

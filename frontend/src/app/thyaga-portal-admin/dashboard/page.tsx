@@ -60,14 +60,14 @@ export default function AdminDashboardPage() {
         </div>
         <div className="flex gap-2">
           <Link
-            href="/admin/flash-sales"
+            href="/thyaga-portal-admin/flash-sales"
             className="bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-red-200 transition flex items-center gap-1.5"
           >
             <Zap className="w-3.5 h-3.5 fill-current" />
             <span>Manage Flash Sales</span>
           </Link>
           <Link
-            href="/admin/products"
+            href="/thyaga-portal-admin/products"
             className="bg-[#36135d] hover:bg-[#a7144c] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
           >
             <Package className="w-3.5 h-3.5" />
@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
               <p className="text-[11px] text-gray-400">Latest orders placed through Thyaga Mall</p>
             </div>
             <Link
-              href="/admin/orders"
+              href="/thyaga-portal-admin/orders"
               className="text-xs font-bold text-[#36135d] hover:text-[#a7144c] flex items-center gap-1"
             >
               <span>View All</span>
@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
                   {stats.recent_orders.map((ord) => (
                     <tr key={ord.id} className="hover:bg-gray-50/50 transition">
                       <td className="p-3 font-bold text-[#36135d]">
-                        <Link href={`/admin/orders`}>{ord.order_number}</Link>
+                        <Link href={`/thyaga-portal-admin/orders`}>{ord.order_number}</Link>
                       </td>
                       <td className="p-3">
                         <div className="font-semibold text-gray-800">{ord.customer_name}</div>

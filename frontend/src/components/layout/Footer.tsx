@@ -96,9 +96,9 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a href="https://mall.thyaga.lk/faq/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+              <Link href="/faq" className="hover:text-white transition">
                 FAQs
-              </a>
+              </Link>
             </li>
             <li>
               <a href="https://mall.thyaga.lk/contact/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
@@ -200,22 +200,19 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="bg-[#0e0818] py-4 border-t border-purple-950 text-gray-400 text-[11px]">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <span>&copy; {new Date().getFullYear()} mall.thyaga.lk. All rights reserved.</span>
-          <span className="text-gray-300 font-medium">
-            A Thyaga Group Company | Proudly Sri Lankan 🇱🇰
-          </span>
-          <div className="flex items-center gap-3 text-[10px]">
-            <a href="https://mall.thyaga.lk/privacy-policy/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+          <div className="flex items-center gap-4 text-[11px]">
+            <Link href="/privacy" className="hover:text-white transition">
               Privacy Policy
-            </a>
-            <span>•</span>
-            <a href="https://mall.thyaga.lk/terms-conditions/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+            </Link>
+            <span className="text-gray-600">•</span>
+            <Link href="/terms" className="hover:text-white transition">
               Terms of Service
-            </a>
-            <span>•</span>
-            <Link href="/admin/login" className="text-purple-400 hover:text-white transition font-bold">
-              Admin Portal
+            </Link>
+            <span className="text-gray-600">•</span>
+            <Link href="/faq" className="hover:text-white transition">
+              FAQs
             </Link>
           </div>
         </div>

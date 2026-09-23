@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const [adminUser, setAdminUser] = useState<Admin | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const isLoginPage = pathname === '/admin/login';
+  const isLoginPage = pathname === '/thyaga-portal-admin/login';
 
   useEffect(() => {
     if (isLoginPage) return;
@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const userStr = localStorage.getItem('thyaga_admin_user');
 
     if (!token) {
-      router.push('/admin/login');
+      router.push('/thyaga-portal-admin/login');
       return;
     }
 
@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = () => {
     localStorage.removeItem('thyaga_admin_token');
     localStorage.removeItem('thyaga_admin_user');
-    router.push('/admin/login');
+    router.push('/thyaga-portal-admin/login');
   };
 
   if (isLoginPage) {
@@ -56,10 +56,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
-    { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'Products', href: '/admin/products', icon: Package },
-    { label: 'Flash Sales', href: '/admin/flash-sales', icon: Zap, badge: 'HOT' },
-    { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
+    { label: 'Dashboard', href: '/thyaga-portal-admin/dashboard', icon: LayoutDashboard },
+    { label: 'Products', href: '/thyaga-portal-admin/products', icon: Package },
+    { label: 'Flash Sales', href: '/thyaga-portal-admin/flash-sales', icon: Zap, badge: 'HOT' },
+    { label: 'Orders', href: '/thyaga-portal-admin/orders', icon: ShoppingBag },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
+          <Link href="/thyaga-portal-admin/dashboard" className="flex items-center gap-2">
             <Image
               src="/logo.png"
               alt="thyāga mall"
