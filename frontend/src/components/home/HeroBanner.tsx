@@ -16,6 +16,7 @@ import {
   BookOpen,
   Dog,
   Grid,
+  ChevronLeft,
   ChevronRight,
   ArrowRight,
   Truck,
@@ -23,7 +24,7 @@ import {
 import { Category } from '@/types';
 
 interface HeroBannerProps {
-  categories: Category[];
+  categories?: Category[];
 }
 
 const CATEGORY_ITEMS = [
@@ -43,43 +44,88 @@ const CATEGORY_ITEMS = [
 
 export default function HeroBanner({ categories }: HeroBannerProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const slides = [
     {
-      title: 'Big Savings Brighter Living',
+      id: 1,
+      titleLine1: 'Big Savings',
+      titleLine2: 'Brighter Living',
       subtext: 'Electronics, Home, Fashion, Beauty & more',
-      subtext2: 'All in one place — mall.thyaga.lk',
-      discount: 'UP TO 60% OFF',
+      subtext2: 'All in one place – mall.thyaga.lk',
+      discountUpTo: 'UP TO',
+      discountValue: '60%',
+      discountOff: 'OFF',
       cta: 'Shop Now',
       link: '/shop',
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
+      image: '/banners/hero_slide_1.jpg',
+      alt: 'Big Savings Brighter Living - Electronics, Home & Fashion',
     },
     {
-      title: 'Smarter Devices for a Better You',
+      id: 2,
+      titleLine1: 'Smarter Devices',
+      titleLine2: 'Better Everyday',
       subtext: 'Premium Audio, Smartwatches & Gadgets',
       subtext2: 'Official Sri Lanka Warranty Guaranteed',
-      discount: 'UP TO 50% OFF',
-      cta: 'Explore Tech',
+      discountUpTo: 'UP TO',
+      discountValue: '50%',
+      discountOff: 'OFF',
+      cta: 'Shop Now',
       link: '/shop?category=electronics',
-      image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80',
+      image: '/banners/hero_slide_2.jpg',
+      alt: 'Smarter Devices for a Better You - Premium Audio & Smart Gadgets',
     },
     {
-      title: 'Trending Styles For Everyone',
-      subtext: 'Apparel, Footwear & Everyday Comfort',
+      id: 3,
+      titleLine1: 'Trending Styles',
+      titleLine2: 'Modern Living',
+      subtext: 'Designer Apparel, Fragrances & Accessories',
       subtext2: 'Fresh Collections at Unbeatable Prices',
-      discount: 'UP TO 40% OFF',
-      cta: 'Shop Fashion',
+      discountUpTo: 'UP TO',
+      discountValue: '45%',
+      discountOff: 'OFF',
+      cta: 'Shop Now',
       link: '/shop?category=fashion',
-      image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
+      image: '/banners/hero_slide_3.jpg',
+      alt: 'Trending Styles For Everyone - Fashion, Footwear & Accessories',
+    },
+    {
+      id: 4,
+      titleLine1: 'Home & Living',
+      titleLine2: 'Smart Essentials',
+      subtext: 'Cookware, Bedding, Decor & Appliances',
+      subtext2: 'Transform Your Home – mall.thyaga.lk',
+      discountUpTo: 'UP TO',
+      discountValue: '55%',
+      discountOff: 'OFF',
+      cta: 'Shop Now',
+      link: '/shop?category=home',
+      image: '/banners/hero_slide_1.jpg',
+      alt: 'Home & Kitchen Smart Essentials',
+    },
+    {
+      id: 5,
+      titleLine1: 'Exclusive Deals',
+      titleLine2: 'Mega Savings',
+      subtext: 'Daily Essentials & Groceries Delivered Fast',
+      subtext2: 'Direct to your doorstep across Sri Lanka',
+      discountUpTo: 'UP TO',
+      discountValue: '40%',
+      discountOff: 'OFF',
+      cta: 'Shop Now',
+      link: '/shop',
+      image: '/banners/hero_slide_2.jpg',
+      alt: 'Exclusive Deals and Mega Savings',
     },
   ];
 
   useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
+    }, 5500);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [isPaused, slides.length]);
 
   const activeSlide = slides[currentSlide];
 
@@ -87,7 +133,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
     <div className="w-full">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
         {/* Left Column: Vertical Category List (12 items) */}
-        <div className="hidden lg:block lg:col-span-3 bg-white rounded-xl border border-gray-200 shadow-2xs p-2 flex flex-col justify-between">
+        <div className="hidden lg:block lg:col-span-3 bg-white rounded-xl border border-gray-200 shadow-2xs p-2.5 flex flex-col justify-between h-[425px]">
           <div className="space-y-0.5">
             {CATEGORY_ITEMS.map((cat) => {
               const Icon = cat.icon;
@@ -108,63 +154,111 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
           </div>
         </div>
 
-        {/* Center Column: Main Hero Promo Banner */}
-        <div className="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-linear-to-r from-[#2c0b4d] via-[#3f106d] to-[#581596] text-white p-6 sm:p-8 min-h-[350px]">
-          {/* Discount Badge Circle Top Right */}
-          <div className="absolute top-5 right-5 sm:top-6 sm:right-6 bg-[#e11d48] w-18 h-18 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center text-center shadow-lg border-2 border-white/20 animate-pulse-subtle z-20">
-            <span className="text-[9px] font-bold tracking-wider text-pink-100 uppercase leading-none">UP TO</span>
-            <span className="text-sm sm:text-base font-black leading-tight text-white my-0.5">60%</span>
-            <span className="text-[9px] font-bold tracking-wider text-pink-100 uppercase leading-none">OFF</span>
+        {/* Center Column: Main Hero Promo Banner (Fixed Locked Height) */}
+        <div
+          className="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-[#240046] text-white p-6 sm:p-7 md:p-8 h-[380px] sm:h-[405px] lg:h-[425px] group select-none"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Background Image of 3D Podium & Tech Products */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              key={activeSlide.image}
+              src={activeSlide.image}
+              alt={activeSlide.alt}
+              fill
+              priority
+              className="object-cover object-right transition-all duration-700 ease-out scale-100 group-hover:scale-[1.02]"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+            />
+            {/* Seamless Left Gradient Overlay ensuring crisp typography contrast */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#20003e] via-[#20003e]/85 sm:via-[#20003e]/65 via-45% to-transparent pointer-events-none" />
           </div>
 
-          {/* Left Content */}
-          <div className="relative z-10 max-w-sm mt-2">
-            <h1 className="text-2xl sm:text-4xl font-black leading-tight tracking-tight mb-2 drop-shadow-sm font-poppins">
-              {activeSlide.title}
+          {/* Scalloped Starburst Rosette Badge Top Right */}
+          <div className="absolute top-4 right-4 sm:top-5 sm:right-6 w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 z-20 transition-transform duration-300 hover:scale-105 drop-shadow-lg animate-pulse-subtle">
+            <svg
+              viewBox="0 0 100 100"
+              className="w-full h-full fill-[#ff007f]"
+              aria-hidden="true"
+            >
+              <path d="M 90.00 50.00 Q 97.08 59.36 86.96 65.31 Q 89.91 76.67 78.28 78.28 Q 76.67 89.91 65.31 86.96 Q 59.36 97.08 50.00 90.00 Q 40.64 97.08 34.69 86.96 Q 23.33 89.91 21.72 78.28 Q 10.09 76.67 13.04 65.31 Q 2.92 59.36 10.00 50.00 Q 2.92 40.64 13.04 34.69 Q 10.09 23.33 21.72 21.72 Q 23.33 10.09 34.69 13.04 Q 40.64 2.92 50.00 10.00 Q 59.36 2.92 65.31 13.04 Q 76.67 10.09 78.28 21.72 Q 89.91 23.33 86.96 34.69 Q 97.08 40.64 90.00 50.00 Z" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white pointer-events-none select-none px-1">
+              <span className="text-[8px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
+                {activeSlide.discountUpTo}
+              </span>
+              <span className="text-base sm:text-xl md:text-2xl font-black leading-tight tracking-tight my-0.5 text-white drop-shadow-xs">
+                {activeSlide.discountValue}
+              </span>
+              <span className="text-[8px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
+                {activeSlide.discountOff}
+              </span>
+            </div>
+          </div>
+
+          {/* Left Typography & CTA Content */}
+          <div className="relative z-10 max-w-xs sm:max-w-sm mt-2 sm:mt-4 md:mt-5">
+            <h1 className="text-2xl sm:text-3xl md:text-[34px] lg:text-[36px] font-black tracking-tight text-white mb-3 sm:mb-4 drop-shadow-xs font-poppins space-y-1 sm:space-y-1.5 leading-tight">
+              <span className="block">{activeSlide.titleLine1}</span>
+              <span className="block">{activeSlide.titleLine2}</span>
             </h1>
-            <p className="text-xs sm:text-sm text-purple-200 font-medium mb-1">
-              {activeSlide.subtext}
-            </p>
-            <p className="text-[11px] text-purple-300/80 mb-6">
-              {activeSlide.subtext2}
-            </p>
+
+            <div className="space-y-1 sm:space-y-1.5 mb-9 sm:mb-11 md:mb-12">
+              <p className="text-xs sm:text-sm text-purple-100 font-medium leading-relaxed">
+                {activeSlide.subtext}
+              </p>
+              <p className="text-[11px] sm:text-xs text-purple-200/80 font-normal leading-normal">
+                {activeSlide.subtext2}
+              </p>
+            </div>
 
             <Link
               href={activeSlide.link}
-              className="inline-flex items-center gap-2 bg-white text-gray-900 hover:bg-[#e11d48] hover:text-white px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer"
+              className="inline-flex items-center gap-3 bg-white text-[#2b0054] hover:bg-purple-50 hover:text-[#3c096c] px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-[14px] font-bold text-xs sm:text-sm transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group/btn cursor-pointer"
             >
-              <span>{activeSlide.cta}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span className="tracking-tight">{activeSlide.cta}</span>
+              <ArrowRight className="w-4 h-4 text-[#2b0054] group-hover/btn:translate-x-1 transition-transform duration-200" />
             </Link>
           </div>
 
-          {/* Product Montage Background Mockup */}
-          <div className="absolute -bottom-2 -right-4 w-60 sm:w-72 h-48 sm:h-56 pointer-events-none opacity-90">
-            <Image
-              src={activeSlide.image}
-              alt={activeSlide.title}
-              fill
-              className="object-contain drop-shadow-2xl"
-            />
+          {/* Navigation Arrows on Hover (Desktop Bottom Right - completely clear of text) */}
+          <div className="hidden sm:flex absolute bottom-4 right-5 sm:bottom-5 sm:right-6 z-20 items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+              className="w-7 h-7 rounded-full bg-black/35 hover:bg-black/60 text-white/90 hover:text-white flex items-center justify-center transition backdrop-blur-xs cursor-pointer shadow-xs"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+              className="w-7 h-7 rounded-full bg-black/35 hover:bg-black/60 text-white/90 hover:text-white flex items-center justify-center transition backdrop-blur-xs cursor-pointer shadow-xs"
+              aria-label="Next slide"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Carousel Dots */}
-          <div className="relative z-10 flex items-center gap-1.5 mt-auto pt-4">
+          {/* Carousel Dots at Bottom Left (Matching Mockup with 5 Dots) */}
+          <div className="relative z-10 flex items-center gap-2 mt-auto pt-4">
             {slides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  currentSlide === idx ? 'w-5 bg-white' : 'w-1.5 bg-white/40'
+                className={`rounded-full transition-all duration-300 cursor-pointer ${
+                  currentSlide === idx
+                    ? 'w-2.5 h-2.5 bg-white shadow-xs ring-2 ring-white/30'
+                    : 'w-2 h-2 bg-white/40 hover:bg-white/70'
                 }`}
-                aria-label={`Slide ${idx + 1}`}
+                aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
           </div>
         </div>
 
         {/* Right Column: 2 Promo Cards (Download App Removed) */}
-        <div className="lg:col-span-3 flex flex-col gap-3 justify-between">
+        <div className="lg:col-span-3 flex flex-col gap-3 justify-between h-[425px]">
           {/* Card 1: New User? Get Rs. 1,000 OFF */}
           <div className="bg-linear-to-br from-[#fff1f2] via-[#ffe4e6] to-[#fecdd3] rounded-xl border border-pink-200 p-5 flex flex-col justify-between shadow-2xs group flex-1">
             <div>
