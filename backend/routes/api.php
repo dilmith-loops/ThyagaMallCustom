@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\AdminActivityLogController;
 use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminFlashSaleController;
+use App\Http\Controllers\Api\Admin\AdminMerchantController;
 use App\Http\Controllers\Api\Admin\AdminOrderController;
 use App\Http\Controllers\Api\Admin\AdminProductController;
 use App\Http\Controllers\Api\Admin\AdminStaffController;
@@ -67,6 +68,15 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::post('/products', [AdminProductController::class, 'store']);
     Route::put('/products/{id}', [AdminProductController::class, 'update']);
     Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);
+
+    // Merchants Management
+    Route::get('/merchants', [AdminMerchantController::class, 'index']);
+    Route::post('/merchants', [AdminMerchantController::class, 'store']);
+    Route::get('/merchants/{id}', [AdminMerchantController::class, 'show']);
+    Route::put('/merchants/{id}', [AdminMerchantController::class, 'update']);
+    Route::delete('/merchants/{id}', [AdminMerchantController::class, 'destroy']);
+    Route::patch('/merchants/{id}/status', [AdminMerchantController::class, 'toggleStatus']);
+    Route::get('/merchants/{id}/products', [AdminMerchantController::class, 'products']);
 
     // Flash Sales Management
     Route::get('/flash-sales', [AdminFlashSaleController::class, 'index']);

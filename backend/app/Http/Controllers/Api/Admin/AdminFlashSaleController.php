@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\FlashSale;
 use App\Models\FlashSaleItem;
 use App\Models\Product;
@@ -46,15 +47,36 @@ class AdminFlashSaleController extends Controller
     {
         $flashSale = FlashSale::findOrFail($id);
 
+        $startTime = $request->input('start_time', $flashSale->start_time);
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'start_time' => 'sometimes|required|date',
-            'end_time' => 'sometimes|required|date|after:start_time',
+            'end_time' => [
+                'sometimes',
+                'required',
+                'date',
+                function ($attribute, $value, $fail) use ($startTime) {
+                    if ($startTime && strtotime($value) <= strtotime($startTime)) {
+                        $fail('The end time must be after the start time.');
+                    }
+                },
+            ],
             'banner_url' => 'nullable|url',
             'is_active' => 'boolean',
         ]);
 
         $flashSale->update($validated);
+
+        if ($request->user()) {
+            ActivityLog::record(
+                'UPDATE_FLASH_SALE',
+                "Updated Flash Sale '{$flashSale->title}' schedule and settings",
+                'FlashSale',
+                $flashSale->id,
+                $request->user(),
+                $request
+            );
+        }
 
         return response()->json([
             'success' => true,

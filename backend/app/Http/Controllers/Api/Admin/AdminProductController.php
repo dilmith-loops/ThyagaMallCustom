@@ -14,7 +14,7 @@ class AdminProductController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Product::with(['category', 'images']);
+        $query = Product::with(['category', 'images', 'merchant']);
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -25,6 +25,10 @@ class AdminProductController extends Controller
 
         if ($categoryId = $request->query('category_id')) {
             $query->where('category_id', $categoryId);
+        }
+
+        if ($merchantId = $request->query('merchant_id')) {
+            $query->where('merchant_id', $merchantId);
         }
 
         if ($request->query('stock_status') === 'low') {
@@ -50,6 +54,7 @@ class AdminProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
+            'merchant_id' => 'nullable|exists:merchants,id',
             'regular_price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -68,6 +73,7 @@ class AdminProductController extends Controller
             'name' => $validated['name'],
             'slug' => $slug,
             'category_id' => $validated['category_id'] ?? null,
+            'merchant_id' => $validated['merchant_id'] ?? null,
             'sku' => $sku,
             'regular_price' => $validated['regular_price'],
             'sale_price' => $validated['sale_price'] ?? null,
@@ -99,7 +105,7 @@ class AdminProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
-            'data' => $product->load('images', 'category'),
+            'data' => $product->load('images', 'category', 'merchant'),
         ], 201);
     }
 
@@ -110,6 +116,7 @@ class AdminProductController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
+            'merchant_id' => 'nullable|exists:merchants,id',
             'regular_price' => 'sometimes|required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'sometimes|required|integer|min:0',

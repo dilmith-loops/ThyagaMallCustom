@@ -40,9 +40,34 @@ export interface Product {
   is_active: boolean;
   primary_image?: string;
   discount_percentage?: number | null;
-  is_in_stock?: boolean;
+  merchant_id?: number | null;
+  merchant?: Merchant;
   category?: Category;
   images?: ProductImage[];
+}
+
+export interface Merchant {
+  id: number;
+  name: string;
+  slug: string;
+  code: string | null;
+  business_type: string | null;
+  contact_person: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  address: string | null;
+  commission_rate: number | string;
+  logo_url: string | null;
+  banner_url: string | null;
+  website: string | null;
+  description: string | null;
+  status: 'active' | 'pending' | 'inactive';
+  is_featured: boolean;
+  products_count?: number;
+  products?: Product[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface FlashSaleItem {

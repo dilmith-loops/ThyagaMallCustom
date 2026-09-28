@@ -8,6 +8,7 @@ import {
   Clock,
   Zap,
   Package,
+  Store,
   AlertTriangle,
   ArrowRight,
   TrendingUp,
@@ -58,7 +59,14 @@ export default function AdminDashboardPage() {
           <h1 className="text-xl sm:text-2xl font-black text-gray-900">Store Performance Overview</h1>
           <p className="text-xs text-gray-500">Live analytics, order tracking, and inventory status for Thyaga Mall</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Link
+            href="/thyaga-portal-admin/merchants"
+            className="bg-purple-50 hover:bg-purple-100 text-[#36135d] text-xs font-bold px-3.5 py-2 rounded-xl border border-purple-200 transition flex items-center gap-1.5"
+          >
+            <Store className="w-3.5 h-3.5" />
+            <span>Merchants</span>
+          </Link>
           <Link
             href="/thyaga-portal-admin/flash-sales"
             className="bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-red-200 transition flex items-center gap-1.5"

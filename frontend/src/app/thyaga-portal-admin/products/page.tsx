@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   Package,
+  Store,
   Plus,
   Search,
   Edit2,
@@ -15,14 +16,16 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { api } from '@/services/api';
-import { Product, Category } from '@/types';
+import { Product, Category, Merchant } from '@/types';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+  const [selectedMerchant, setSelectedMerchant] = useState<number | undefined>();
   const [isLoading, setIsLoading] = useState(true);
 
   // Modal State
@@ -31,6 +34,7 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState({
     name: '',
     category_id: '',
+    merchant_id: '',
     sku: '',
     regular_price: '',
     sale_price: '',
@@ -52,6 +56,7 @@ export default function AdminProductsPage() {
         page,
         search: search || undefined,
         category_id: selectedCategory,
+        merchant_id: selectedMerchant,
       });
 
       if (res.success) {
@@ -66,11 +71,17 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem('thyaga_admin_token') || '';
     api.getCategories().then((res) => {
       if (res.success) setCategories(res.data);
     });
+    if (token) {
+      api.getAdminMerchants(token, { all: true }).then((res) => {
+        if (res.success) setMerchants(res.data);
+      });
+    }
     fetchProducts(1);
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedMerchant]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +93,7 @@ export default function AdminProductsPage() {
     setFormData({
       name: '',
       category_id: categories[0]?.id.toString() || '',
+      merchant_id: '',
       sku: '',
       regular_price: '',
       sale_price: '',
@@ -98,6 +110,7 @@ export default function AdminProductsPage() {
     setFormData({
       name: p.name,
       category_id: p.category_id ? p.category_id.toString() : '',
+      merchant_id: p.merchant_id ? p.merchant_id.toString() : '',
       sku: p.sku || '',
       regular_price: p.regular_price.toString(),
       sale_price: p.sale_price ? p.sale_price.toString() : '',
@@ -119,6 +132,7 @@ export default function AdminProductsPage() {
       const payload: any = {
         name: formData.name,
         category_id: formData.category_id ? parseInt(formData.category_id, 10) : null,
+        merchant_id: formData.merchant_id ? parseInt(formData.merchant_id, 10) : null,
         sku: formData.sku || undefined,
         regular_price: parseFloat(formData.regular_price),
         sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
@@ -203,20 +217,38 @@ export default function AdminProductsPage() {
           </button>
         </form>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Category:</span>
-          <select
-            value={selectedCategory || ''}
-            onChange={(e) => setSelectedCategory(e.target.value ? parseInt(e.target.value, 10) : undefined)}
-            className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-3 py-2 focus:outline-hidden"
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500">Category:</span>
+            <select
+              value={selectedCategory || ''}
+              onChange={(e) => setSelectedCategory(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+              className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-hidden"
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500">Merchant:</span>
+            <select
+              value={selectedMerchant || ''}
+              onChange={(e) => setSelectedMerchant(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+              className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-hidden"
+            >
+              <option value="">All Merchants</option>
+              {merchants.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -238,7 +270,7 @@ export default function AdminProductsPage() {
                 <tr>
                   <th className="p-3 w-16">Image</th>
                   <th className="p-3">Product Name & SKU</th>
-                  <th className="p-3">Category</th>
+                  <th className="p-3">Category & Merchant</th>
                   <th className="p-3">Regular Price</th>
                   <th className="p-3">Sale Price</th>
                   <th className="p-3">Stock</th>
@@ -260,12 +292,18 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="p-3 max-w-xs">
                       <div className="font-bold text-gray-900 line-clamp-1">{p.name}</div>
-                      <div className="text-[10px] text-gray-400">SKU: {p.sku || `THY-${p.id}`}</div>
+                      <div className="text-[10px] text-gray-400 font-mono">SKU: {p.sku || `THY-${p.id}`}</div>
                     </td>
                     <td className="p-3">
-                      <span className="bg-purple-50 text-[#36135d] font-semibold px-2 py-0.5 rounded text-[10px]">
+                      <span className="bg-purple-50 text-[#36135d] font-semibold px-2 py-0.5 rounded text-[10px] inline-block mb-0.5">
                         {p.category?.name || 'General'}
                       </span>
+                      {p.merchant && (
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500 font-medium">
+                          <Store className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                          <span className="truncate max-w-[120px]">{p.merchant.name}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="p-3 font-semibold text-gray-700">
                       Rs. {Number(p.regular_price).toLocaleString()}
@@ -362,7 +400,7 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-gray-700 mb-1">Category</label>
                   <select
@@ -374,6 +412,22 @@ export default function AdminProductsPage() {
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Merchant Partner</label>
+                  <select
+                    value={formData.merchant_id}
+                    onChange={(e) => setFormData({ ...formData, merchant_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden"
+                  >
+                    <option value="">No Merchant (Store)</option>
+                    {merchants.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
                       </option>
                     ))}
                   </select>

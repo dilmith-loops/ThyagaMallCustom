@@ -14,6 +14,7 @@ import {
   LogOut,
   ExternalLink,
   ShieldCheck,
+  Store,
   Menu,
   X,
   ChevronLeft,
@@ -84,6 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { label: 'Dashboard', href: '/thyaga-portal-admin/dashboard', icon: LayoutDashboard },
     { label: 'Products', href: '/thyaga-portal-admin/products', icon: Package },
+    { label: 'Merchants', href: '/thyaga-portal-admin/merchants', icon: Store },
     { label: 'Flash Sales', href: '/thyaga-portal-admin/flash-sales', icon: Zap, badge: 'HOT' },
     { label: 'Orders', href: '/thyaga-portal-admin/orders', icon: ShoppingBag },
     { label: 'Customers', href: '/thyaga-portal-admin/users', icon: Users },

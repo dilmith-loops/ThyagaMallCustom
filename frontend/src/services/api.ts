@@ -5,6 +5,7 @@ import {
   Order,
   Admin,
   ManagedUser,
+  Merchant,
   ActivityLogItem,
   CustomerAuthUser,
   CustomerAuthResponse,
@@ -235,6 +236,7 @@ export const api = {
     page?: number;
     search?: string;
     category_id?: number;
+    merchant_id?: number;
     stock_status?: string;
     per_page?: number;
   } = {}): Promise<{
@@ -251,6 +253,7 @@ export const api = {
     if (params.page) query.append('page', params.page.toString());
     if (params.search) query.append('search', params.search);
     if (params.category_id) query.append('category_id', params.category_id.toString());
+    if (params.merchant_id) query.append('merchant_id', params.merchant_id.toString());
     if (params.stock_status) query.append('stock_status', params.stock_status);
     if (params.per_page) query.append('per_page', params.per_page.toString());
 
@@ -287,6 +290,116 @@ export const api = {
   async deleteAdminProduct(token: string, id: number): Promise<{ success: boolean; message: string }> {
     return fetcher(`/admin/products/${id}`, {
       method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Merchant Management Methods
+  async getAdminMerchants(token: string, params: {
+    page?: number;
+    search?: string;
+    status?: string;
+    sort_by?: string;
+    per_page?: number | string;
+    all?: boolean;
+  } = {}): Promise<{
+    success: boolean;
+    stats: {
+      total_merchants: number;
+      active_merchants: number;
+      pending_merchants: number;
+      inactive_merchants: number;
+      total_assigned_products: number;
+      avg_commission: number;
+    };
+    data: Merchant[];
+    pagination?: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    if (params.search) query.append('search', params.search);
+    if (params.status) query.append('status', params.status);
+    if (params.sort_by) query.append('sort_by', params.sort_by);
+    if (params.per_page) query.append('per_page', params.per_page.toString());
+    if (params.all) query.append('all', 'true');
+
+    const qs = query.toString();
+    return fetcher(`/admin/merchants${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async getAdminMerchant(token: string, id: number): Promise<{
+    success: boolean;
+    data: Merchant;
+  }> {
+    return fetcher(`/admin/merchants/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async createAdminMerchant(token: string, data: Partial<Merchant>): Promise<{
+    success: boolean;
+    message: string;
+    data: Merchant;
+  }> {
+    return fetcher('/admin/merchants', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateAdminMerchant(token: string, id: number, data: Partial<Merchant>): Promise<{
+    success: boolean;
+    message: string;
+    data: Merchant;
+  }> {
+    return fetcher(`/admin/merchants/${id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAdminMerchant(token: string, id: number): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return fetcher(`/admin/merchants/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async toggleAdminMerchantStatus(token: string, id: number, status?: string): Promise<{
+    success: boolean;
+    message: string;
+    data: Merchant;
+  }> {
+    return fetcher(`/admin/merchants/${id}/status`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  async getAdminMerchantProducts(token: string, id: number, params: { page?: number; per_page?: number } = {}): Promise<{
+    success: boolean;
+    merchant: { id: number; name: string; code: string | null; logo_url: string | null };
+    data: Product[];
+    pagination: { current_page: number; last_page: number; total: number };
+  }> {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    if (params.per_page) query.append('per_page', params.per_page.toString());
+    const qs = query.toString();
+    return fetcher(`/admin/merchants/${id}/products${qs ? `?${qs}` : ''}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
