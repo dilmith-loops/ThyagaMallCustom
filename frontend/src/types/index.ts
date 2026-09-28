@@ -205,3 +205,15 @@ export interface CustomerAuthResponse {
   user: CustomerAuthUser;
 }
 
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  status: 'subscribed' | 'unsubscribed';
+  source?: string | null;
+  ip_address?: string | null;
+  subscribed_at?: string | null;
+  unsubscribed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+

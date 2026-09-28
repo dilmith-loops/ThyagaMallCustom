@@ -15,6 +15,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Store,
+  Mail,
   Menu,
   X,
   ChevronLeft,
@@ -89,6 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Flash Sales', href: '/thyaga-portal-admin/flash-sales', icon: Zap, badge: 'HOT' },
     { label: 'Orders', href: '/thyaga-portal-admin/orders', icon: ShoppingBag },
     { label: 'Customers', href: '/thyaga-portal-admin/users', icon: Users },
+    { label: 'Subscribers', href: '/thyaga-portal-admin/subscribers', icon: Mail },
     { label: 'Administrators', href: '/thyaga-portal-admin/admins', icon: ShieldCheck },
     { label: 'Activity Logs', href: '/thyaga-portal-admin/activity-logs', icon: Activity },
   ];

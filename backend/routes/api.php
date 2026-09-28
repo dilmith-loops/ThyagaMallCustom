@@ -5,12 +5,14 @@ use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminFlashSaleController;
 use App\Http\Controllers\Api\Admin\AdminMerchantController;
+use App\Http\Controllers\Api\Admin\AdminNewsletterController;
 use App\Http\Controllers\Api\Admin\AdminOrderController;
 use App\Http\Controllers\Api\Admin\AdminProductController;
 use App\Http\Controllers\Api\Admin\AdminStaffController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\FlashSaleController;
+use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CustomerAuthController;
@@ -46,6 +48,8 @@ Route::prefix('products')->group(function () {
 Route::get('/flash-sale/active', [FlashSaleController::class, 'active']);
 
 Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
+
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 
 Route::prefix('orders')->group(function () {
     Route::post('/', [OrderController::class, 'store']);
@@ -104,4 +108,10 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
 
     // Activity Logs
     Route::get('/activity-logs', [AdminActivityLogController::class, 'index']);
+
+    // Newsletter Subscribers Management
+    Route::get('/newsletter-subscribers', [AdminNewsletterController::class, 'index']);
+    Route::post('/newsletter-subscribers', [AdminNewsletterController::class, 'store']);
+    Route::patch('/newsletter-subscribers/{id}/status', [AdminNewsletterController::class, 'toggleStatus']);
+    Route::delete('/newsletter-subscribers/{id}', [AdminNewsletterController::class, 'destroy']);
 });

@@ -6,6 +6,7 @@ import {
   Admin,
   ManagedUser,
   Merchant,
+  NewsletterSubscriber,
   ActivityLogItem,
   CustomerAuthUser,
   CustomerAuthResponse,
@@ -164,6 +165,19 @@ export const api = {
     return fetcher('/vouchers/apply', {
       method: 'POST',
       body: JSON.stringify({ code, subtotal }),
+    });
+  },
+
+  // Newsletter
+  async subscribeNewsletter(email: string, source: string = 'home_banner'): Promise<{
+    success: boolean;
+    message: string;
+    already_subscribed?: boolean;
+    data: NewsletterSubscriber;
+  }> {
+    return fetcher('/newsletter/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ email, source }),
     });
   },
 
@@ -644,6 +658,84 @@ export const api = {
 
     const qs = query.toString();
     return fetcher(`/admin/activity-logs${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Admin Newsletter Subscribers Management
+  async getAdminNewsletterSubscribers(token: string, params: {
+    page?: number;
+    search?: string;
+    status?: string;
+    source?: string;
+    sort_by?: string;
+    per_page?: number;
+    all?: boolean;
+  } = {}): Promise<{
+    success: boolean;
+    stats: {
+      total_subscribers: number;
+      active_subscribers: number;
+      unsubscribed_subscribers: number;
+      recent_subscribers_7d: number;
+    };
+    data: NewsletterSubscriber[];
+    pagination?: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    if (params.search) query.append('search', params.search);
+    if (params.status) query.append('status', params.status);
+    if (params.source) query.append('source', params.source);
+    if (params.sort_by) query.append('sort_by', params.sort_by);
+    if (params.per_page) query.append('per_page', params.per_page.toString());
+    if (params.all) query.append('all', 'true');
+
+    const qs = query.toString();
+    return fetcher(`/admin/newsletter-subscribers${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async createAdminNewsletterSubscriber(token: string, data: {
+    email: string;
+    status?: 'subscribed' | 'unsubscribed';
+    source?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: NewsletterSubscriber;
+  }> {
+    return fetcher('/admin/newsletter-subscribers', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async toggleAdminNewsletterSubscriberStatus(token: string, id: number, status?: string): Promise<{
+    success: boolean;
+    message: string;
+    data: NewsletterSubscriber;
+  }> {
+    return fetcher(`/admin/newsletter-subscribers/${id}/status`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  async deleteAdminNewsletterSubscriber(token: string, id: number): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return fetcher(`/admin/newsletter-subscribers/${id}`, {
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
   },
