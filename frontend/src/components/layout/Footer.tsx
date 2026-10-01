@@ -8,7 +8,7 @@ import { getAssetUrl } from '@/utils/assets';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#150d22] text-gray-300 mt-12 border-t-2 border-[#36135d]">
+    <footer className="hidden md:block bg-[#150d22] text-gray-300 mt-12 border-t-2 border-[#36135d]">
       {/* Main 5-Column Grid */}
       <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 text-xs">
         {/* Col 1: Brand Info (span 4) */}

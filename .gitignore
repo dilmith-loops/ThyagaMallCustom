@@ -1,7 +1,12 @@
-dist_thyagamall/
-ThyagaMall_Hostinger_Deploy.zip
-frontend/out/
-*.log
-.DS_Store
-*.sql
+# Database dumps
 database_dump/
+*.sql
+
+# Build artifacts
+dist_thyagamall/
+node_modules/
+.DS_Store
+
+# Frontend build cache
+frontend/.next/
+frontend/out/
