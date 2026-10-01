@@ -61,8 +61,16 @@ class WebxpayService
             $cleanPhone = '0770000000';
         }
 
-        // Format price to 2 decimal places
-        $price = number_format((float) $order->total, 2, '.', '');
+        // Format price to 2 decimal places (WebXpay Sandbox enforces a maximum test limit of LKR 100.00)
+        $actualTotal = (float) $order->total;
+        $price = number_format($actualTotal, 2, '.', '');
+        if ($this->mode === 'sandbox' && $actualTotal > 100.00) {
+            $price = '100.00';
+            Log::info("WebXpay Sandbox: Total capped to LKR 100.00 for sandbox test gateway compatibility", [
+                'order_number' => $order->order_number,
+                'actual_total' => $actualTotal,
+            ]);
+        }
 
         // Custom fields pipe-separated (e.g. order_number|total|order_id)
         $customFieldsPlain = $order->order_number . '|' . $price . '|' . $order->id;
@@ -112,7 +120,7 @@ class WebxpayService
             $publicKeyResource = @openssl_pkey_get_public($formattedKey);
             $encryptedData = '';
 
-            if ($publicKeyResource && @openssl_public_encrypt($paymentPlaintext, $encryptedData, $publicKeyResource, OPENSSL_PKCS1_PADDING)) {
+            if ($publicKeyResource && @openssl_public_encrypt($paymentPlaintext, $encryptedData, $publicKeyResource, OPENSSL_PKCS1_OAEP_PADDING)) {
                 $fields['payment'] = base64_encode($encryptedData);
             } else {
                 Log::error('WebXpay RSA encryption failed: ' . openssl_error_string());
