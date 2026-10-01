@@ -6,7 +6,7 @@ import { Truck, ShieldCheck, RefreshCw, HelpCircle, Store, ChevronDown } from 'l
 
 export default function TopBar() {
   return (
-    <div className="bg-[#180e2b] text-gray-300 text-[11px] py-1.5 px-4 border-b border-[#2b184a]">
+    <div className="hidden md:block bg-[#180e2b] text-gray-300 text-[11px] py-1.5 px-4 border-b border-[#2b184a]">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
         {/* Left: Value Badges */}
         <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-start">
