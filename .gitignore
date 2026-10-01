@@ -1,0 +1,12 @@
+# Database dumps & SQL
+database_dump/
+*.sql
+
+# Build & Temporary packages
+dist_thyagamall/
+node_modules/
+.DS_Store
+
+# Frontend Next.js build cache
+frontend/.next/
+frontend/out/
