@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Admin } from '@/types';
+import { getAssetUrl } from '@/utils/assets';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <Link href="/thyaga-portal-admin/dashboard" className="flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src={getAssetUrl('/logo.png')}
               alt="thyāga mall"
               width={100}
               height={51}
@@ -179,7 +180,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex md:hidden items-center justify-between pb-3 mb-2 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Image
-                  src="/logo.png"
+                  src={getAssetUrl('/logo.png')}
                   alt="thyāga mall"
                   width={90}
                   height={46}

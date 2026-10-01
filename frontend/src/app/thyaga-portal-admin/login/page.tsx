@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '@/services/api';
+import { getAssetUrl } from '@/utils/assets';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function AdminLoginPage() {
         {/* Brand Header */}
         <div className="text-center space-y-2 flex flex-col items-center">
           <Image
-            src="/logo.png"
+            src={getAssetUrl('/logo.png')}
             alt="thyāga mall"
             width={160}
             height={81}

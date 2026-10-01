@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { Category } from '@/types';
+import { getAssetUrl } from '@/utils/assets';
 
 export default function Header() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function Header() {
         {/* Official Thyaga Mall Logo */}
         <Link href="/" className="shrink-0 flex items-center group">
           <Image
-            src="/logo.png"
+            src={getAssetUrl('/logo.png')}
             alt="thyāga mall"
             width={170}
             height={86}

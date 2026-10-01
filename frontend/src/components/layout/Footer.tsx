@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Phone, Mail, ShieldCheck, Lock } from 'lucide-react';
+import { getAssetUrl } from '@/utils/assets';
 
 export default function Footer() {
   return (
@@ -15,7 +16,7 @@ export default function Footer() {
           {/* Official Logo Card */}
           <div className="bg-white px-2.5 py-1.5 rounded-lg w-fit shadow-xs">
             <Image
-              src="/logo.png"
+              src={getAssetUrl('/logo.png')}
               alt="thyāga mall"
               width={140}
               height={71}
@@ -160,28 +161,28 @@ export default function Footer() {
           
           <div className="grid grid-cols-2 gap-1.5 text-center">
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="Visa">
-              <img src="/payments/visa.svg" alt="Visa" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/visa.svg')} alt="Visa" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="Mastercard">
-              <img src="/payments/mastercard.svg" alt="Mastercard" className="max-h-6 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/mastercard.svg')} alt="Mastercard" className="max-h-6 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="American Express">
-              <img src="/payments/amex.svg" alt="AMEX" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/amex.svg')} alt="AMEX" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="Koko Buy Now Pay Later">
-              <img src="/payments/koko.png" alt="Koko" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/koko.png')} alt="Koko" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="FriMi Digital Banking">
-              <img src="/payments/frimi.png" alt="FriMi" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/frimi.png')} alt="FriMi" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="Dialog Genie">
-              <img src="/payments/genie.svg" alt="Genie" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/genie.svg')} alt="Genie" className="max-h-5 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="Bank Transfer">
-              <img src="/payments/bank-transfer.svg" alt="Bank Transfer" className="max-h-6 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/bank-transfer.svg')} alt="Bank Transfer" className="max-h-6 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
             <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-8 shadow-xs hover:shadow transition group" title="Cash on Delivery (COD)">
-              <img src="/payments/cod.svg" alt="Cash on Delivery" className="max-h-6 max-w-full object-contain group-hover:scale-105 transition-transform" />
+              <img src={getAssetUrl('/payments/cod.svg')} alt="Cash on Delivery" className="max-h-6 max-w-full object-contain group-hover:scale-105 transition-transform" />
             </div>
           </div>
 

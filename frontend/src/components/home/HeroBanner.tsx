@@ -22,6 +22,7 @@ import {
   Truck,
 } from 'lucide-react';
 import { Category } from '@/types';
+import { getAssetUrl } from '@/utils/assets';
 
 interface HeroBannerProps {
   categories?: Category[];
@@ -164,7 +165,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
           <div className="absolute inset-0 z-0">
             <Image
               key={activeSlide.image}
-              src={activeSlide.image}
+              src={getAssetUrl(activeSlide.image)}
               alt={activeSlide.alt}
               fill
               priority

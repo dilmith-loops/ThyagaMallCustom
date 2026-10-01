@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { getAssetUrl } from '@/utils/assets';
 
 function RegisterForm() {
   const router = useRouter();
@@ -92,7 +93,7 @@ function RegisterForm() {
             <Link href="/" className="inline-flex items-center gap-2 mb-3">
               <div className="relative w-9 h-9">
                 <Image
-                  src="/logo.png"
+                  src={getAssetUrl('/logo.png')}
                   alt="Thyaga Mall"
                   fill
                   className="object-contain"
