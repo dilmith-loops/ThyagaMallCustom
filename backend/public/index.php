@@ -24,6 +24,18 @@ foreach (glob(__DIR__.'/../bootstrap/cache/*.php') as $cacheFile) {
     }
 }
 
+// Ensure required storage directories exist
+foreach ([
+    __DIR__.'/../storage/framework/cache/data',
+    __DIR__.'/../storage/framework/sessions',
+    __DIR__.'/../storage/framework/views',
+    __DIR__.'/../storage/logs',
+] as $storageDir) {
+    if (!is_dir($storageDir)) {
+        @mkdir($storageDir, 0777, true);
+    }
+}
+
 try {
     // Bootstrap Laravel and handle the request...
     /** @var Application $app */
