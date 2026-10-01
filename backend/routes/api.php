@@ -20,6 +20,28 @@ use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// Health Check & Root API Status
+Route::get('/', function () {
+    return response()->json([
+        'status' => 'online',
+        'app' => 'Thyaga Mall API',
+        'version' => '1.0.0',
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
+
+Route::get('/health', function () {
+    try {
+        $dbStatus = \Illuminate\Support\Facades\DB::connection()->getPdo() ? 'connected' : 'disconnected';
+    } catch (\Throwable $e) {
+        $dbStatus = 'error: ' . $e->getMessage();
+    }
+    return response()->json([
+        'status' => 'ok',
+        'database' => $dbStatus,
+    ]);
+});
+
 // Public Customer Authentication
 Route::prefix('auth')->group(function () {
     Route::post('/register', [CustomerAuthController::class, 'register']);

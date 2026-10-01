@@ -1,0 +1,12 @@
+# Protect sensitive files in Laravel backend
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "(composer\.json|composer\.lock|package\.json|artisan|phpunit\.xml)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+Options -Indexes

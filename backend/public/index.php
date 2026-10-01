@@ -17,4 +17,11 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+// Normalize subfolder prefix if hosted under /ThyagaMall/api
+if (isset($_SERVER['REQUEST_URI'])) {
+    if (preg_match('#^/ThyagaMall(/api.*)$#i', $_SERVER['REQUEST_URI'], $matches)) {
+        $_SERVER['REQUEST_URI'] = $matches[1];
+    }
+}
+
 $app->handleRequest(Request::capture());

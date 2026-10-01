@@ -1,0 +1,7 @@
+dist_thyagamall/
+ThyagaMall_Hostinger_Deploy.zip
+frontend/out/
+*.log
+.DS_Store
+*.sql
+database_dump/
