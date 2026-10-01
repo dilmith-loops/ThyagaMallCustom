@@ -105,13 +105,7 @@ class Response
         'etag' => true,
     ];
 
-    public ResponseHeaderBag $headers {
-        set {
-            trigger_deprecation('symfony/http-foundation', '8.1', 'Directly setting property "headers" of "%s" is deprecated; pass the header bag as a constructor argument instead.', static::class);
-
-            $this->headers = $value;
-        }
-    }
+    public ResponseHeaderBag $headers;
 
     /**
      * Status codes translation table.
