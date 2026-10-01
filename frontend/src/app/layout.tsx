@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: 'Thyaga Mall – Premier Online Shopping in Sri Lanka | Flash Deals & Vouchers',
   description: 'Shop authentic electronics, home essentials, beauty, and food products with Thyaga Gift Vouchers. Enjoy 24H flash deals and free islandwide shipping on orders over Rs. 2,999.',
   icons: {
-    icon: '/logo.png',
+    icon: '/ThyagaMall/logo.png',
   },
 };
 
