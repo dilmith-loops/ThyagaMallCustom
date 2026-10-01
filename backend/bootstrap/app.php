@@ -13,7 +13,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+            'payment/*',
+            'payment/webxpay/*',
+            'api/payment/webxpay/*',
+            'checkout',
+            'checkout/*',
+            '*webxpay*',
+            '*checkout*',
+            'ThyagaMall/api/payment/webxpay/*',
+            'ThyagaMall/checkout',
+            'ThyagaMall/checkout/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Throwable $e, Request $request) {
