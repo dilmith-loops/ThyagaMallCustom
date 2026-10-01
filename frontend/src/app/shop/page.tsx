@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/services/api';
 import { Category, Product } from '@/types';
 import ProductCard from '@/components/product/ProductCard';
-import { Filter, SlidersHorizontal, ChevronRight, Loader2, Sparkles, Check } from 'lucide-react';
+import { Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2, Sparkles, Check } from 'lucide-react';
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -243,20 +243,88 @@ function ShopContent() {
 
           {/* Pagination */}
           {pagination.last_page > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-6">
-              {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((p) => (
+            <div className="pt-6">
+              {/* Mobile Compact Pagination (< sm) */}
+              <div className="flex sm:hidden items-center justify-between w-full gap-2">
                 <button
-                  key={p}
-                  onClick={() => updateFilters({ page: p.toString() })}
-                  className={`w-9 h-9 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    p === pagination.current_page
-                      ? 'bg-[#36135d] text-white shadow-sm'
-                      : 'bg-white hover:bg-purple-50 text-gray-700 border border-gray-200'
-                  }`}
+                  disabled={pagination.current_page <= 1}
+                  onClick={() => updateFilters({ page: (pagination.current_page - 1).toString() })}
+                  className="flex items-center gap-1 px-3.5 py-2 rounded-lg text-xs font-semibold bg-white border border-gray-200 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                 >
-                  {p}
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Previous</span>
                 </button>
-              ))}
+
+                <span className="text-xs font-medium text-gray-600 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-2xs">
+                  Page <strong className="font-bold text-[#36135d]">{pagination.current_page}</strong> of {pagination.last_page}
+                </span>
+
+                <button
+                  disabled={pagination.current_page >= pagination.last_page}
+                  onClick={() => updateFilters({ page: (pagination.current_page + 1).toString() })}
+                  className="flex items-center gap-1 px-3.5 py-2 rounded-lg text-xs font-semibold bg-white border border-gray-200 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Desktop / Tablet Numbered Pagination (>= sm) */}
+              <div className="hidden sm:flex items-center justify-center gap-1.5">
+                <button
+                  disabled={pagination.current_page <= 1}
+                  onClick={() => updateFilters({ page: (pagination.current_page - 1).toString() })}
+                  className="h-9 px-3 rounded-lg text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-purple-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Prev</span>
+                </button>
+
+                {(() => {
+                  const current = pagination.current_page;
+                  const total = pagination.last_page;
+                  let pages: (number | string)[] = [];
+
+                  if (total <= 7) {
+                    pages = Array.from({ length: total }, (_, i) => i + 1);
+                  } else if (current <= 3) {
+                    pages = [1, 2, 3, 4, '...', total];
+                  } else if (current >= total - 2) {
+                    pages = [1, '...', total - 3, total - 2, total - 1, total];
+                  } else {
+                    pages = [1, '...', current - 1, current, current + 1, '...', total];
+                  }
+
+                  return pages.map((p, idx) =>
+                    p === '...' ? (
+                      <span key={`dots-${idx}`} className="w-9 h-9 flex items-center justify-center text-xs font-bold text-gray-400">
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={`page-${p}`}
+                        onClick={() => updateFilters({ page: p.toString() })}
+                        className={`w-9 h-9 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          p === pagination.current_page
+                            ? 'bg-[#36135d] text-white shadow-xs'
+                            : 'bg-white hover:bg-purple-50 text-gray-700 border border-gray-200'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  );
+                })()}
+
+                <button
+                  disabled={pagination.current_page >= pagination.last_page}
+                  onClick={() => updateFilters({ page: (pagination.current_page + 1).toString() })}
+                  className="h-9 px-3 rounded-lg text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-purple-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition cursor-pointer"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </main>
