@@ -2237,11 +2237,7 @@ class Request
 
     private static function setProperty(self $request, string $name, mixed $value): void
     {
-        static $cache;
-
-        $r = $cache[$name] ??= new \ReflectionProperty(self::class, $name);
-
-        $r->setRawValue($request, $value);
+        $request->$name = $value;
     }
 
     /**

@@ -30,17 +30,7 @@ final class ViewEvent extends RequestEvent
     /**
      * @deprecated since Symfony 8.1, use $controllerMetadata instead
      */
-    public private(set) ?ControllerArgumentsEvent $controllerArgumentsEvent {
-        get {
-            trigger_deprecation('symfony/http-kernel', '8.1', 'Accessing the "controllerArgumentsEvent" property of the "%s" class is deprecated. Use "controllerMetadata" instead.', __CLASS__);
-
-            if (!$m = $this->controllerMetadata) {
-                return null;
-            }
-
-            return $this->controllerArgumentsEvent ??= new ControllerArgumentsEvent($this->getKernel(), \Closure::bind(fn () => $this->controllerEvent, $m, ControllerMetadata::class)(), $m->getArguments(), $this->getRequest(), $this->getRequestType());
-        }
-    }
+    public ?ControllerArgumentsEvent $controllerArgumentsEvent = null;
 
     public function __construct(
         HttpKernelInterface $kernel,

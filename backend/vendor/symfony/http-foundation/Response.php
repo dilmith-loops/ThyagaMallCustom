@@ -1316,10 +1316,6 @@ class Response
 
     private static function setHeaders(self $response, ResponseHeaderBag $headers): void
     {
-        static $r;
-
-        $r ??= new \ReflectionProperty(self::class, 'headers');
-
-        $r->setRawValue($response, $headers);
+        $response->headers = $headers;
     }
 }
