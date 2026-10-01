@@ -157,7 +157,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
 
         {/* Center Column: Main Hero Promo Banner (Fixed Locked Height) */}
         <div
-          className="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-[#240046] text-white p-6 sm:p-7 md:p-8 h-[380px] sm:h-[405px] lg:h-[425px] group select-none"
+          className="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-[#240046] text-white p-4 sm:p-7 md:p-8 h-[270px] sm:h-[350px] lg:h-[425px] group select-none"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
@@ -177,7 +177,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
           </div>
 
           {/* Scalloped Starburst Rosette Badge Top Right */}
-          <div className="absolute top-4 right-4 sm:top-5 sm:right-6 w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 z-20 transition-transform duration-300 hover:scale-105 drop-shadow-lg animate-pulse-subtle">
+          <div className="absolute top-3 right-3 sm:top-5 sm:right-6 w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 z-20 transition-transform duration-300 hover:scale-105 drop-shadow-md animate-pulse-subtle">
             <svg
               viewBox="0 0 100 100"
               className="w-full h-full fill-[#ff007f]"
@@ -186,40 +186,40 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
               <path d="M 90.00 50.00 Q 97.08 59.36 86.96 65.31 Q 89.91 76.67 78.28 78.28 Q 76.67 89.91 65.31 86.96 Q 59.36 97.08 50.00 90.00 Q 40.64 97.08 34.69 86.96 Q 23.33 89.91 21.72 78.28 Q 10.09 76.67 13.04 65.31 Q 2.92 59.36 10.00 50.00 Q 2.92 40.64 13.04 34.69 Q 10.09 23.33 21.72 21.72 Q 23.33 10.09 34.69 13.04 Q 40.64 2.92 50.00 10.00 Q 59.36 2.92 65.31 13.04 Q 76.67 10.09 78.28 21.72 Q 89.91 23.33 86.96 34.69 Q 97.08 40.64 90.00 50.00 Z" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white pointer-events-none select-none px-1">
-              <span className="text-[8px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
+              <span className="text-[7px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
                 {activeSlide.discountUpTo}
               </span>
-              <span className="text-base sm:text-xl md:text-2xl font-black leading-tight tracking-tight my-0.5 text-white drop-shadow-xs">
+              <span className="text-sm sm:text-xl md:text-2xl font-black leading-tight tracking-tight my-0.5 text-white drop-shadow-xs">
                 {activeSlide.discountValue}
               </span>
-              <span className="text-[8px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
+              <span className="text-[7px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
                 {activeSlide.discountOff}
               </span>
             </div>
           </div>
 
           {/* Left Typography & CTA Content */}
-          <div className="relative z-10 max-w-xs sm:max-w-sm mt-2 sm:mt-4 md:mt-5">
-            <h1 className="text-2xl sm:text-3xl md:text-[34px] lg:text-[36px] font-black tracking-tight text-white mb-3 sm:mb-4 drop-shadow-xs font-poppins space-y-1 sm:space-y-1.5 leading-tight">
+          <div className="relative z-10 max-w-[220px] sm:max-w-xs md:max-w-sm mt-0 sm:mt-2 md:mt-4">
+            <h1 className="text-xl sm:text-3xl md:text-[34px] lg:text-[36px] font-black tracking-tight text-white mb-1.5 sm:mb-3.5 drop-shadow-xs font-poppins space-y-0.5 sm:space-y-1.5 leading-tight">
               <span className="block">{activeSlide.titleLine1}</span>
               <span className="block">{activeSlide.titleLine2}</span>
             </h1>
 
-            <div className="space-y-1 sm:space-y-1.5 mb-9 sm:mb-11 md:mb-12">
-              <p className="text-xs sm:text-sm text-purple-100 font-medium leading-relaxed">
+            <div className="space-y-0.5 sm:space-y-1 mb-3 sm:mb-6 md:mb-8">
+              <p className="text-[11px] sm:text-sm text-purple-100 font-medium leading-tight">
                 {activeSlide.subtext}
               </p>
-              <p className="text-[11px] sm:text-xs text-purple-200/80 font-normal leading-normal">
+              <p className="text-[10px] sm:text-xs text-purple-200/80 font-normal leading-tight">
                 {activeSlide.subtext2}
               </p>
             </div>
 
             <Link
               href={activeSlide.link}
-              className="inline-flex items-center gap-3 bg-white text-[#2b0054] hover:bg-purple-50 hover:text-[#3c096c] px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-[14px] font-bold text-xs sm:text-sm transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group/btn cursor-pointer"
+              className="inline-flex items-center gap-2 sm:gap-3 bg-white text-[#2b0054] hover:bg-purple-50 hover:text-[#3c096c] px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-[14px] font-bold text-xs sm:text-sm transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group/btn cursor-pointer"
             >
               <span className="tracking-tight">{activeSlide.cta}</span>
-              <ArrowRight className="w-4 h-4 text-[#2b0054] group-hover/btn:translate-x-1 transition-transform duration-200" />
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2b0054] group-hover/btn:translate-x-1 transition-transform duration-200" />
             </Link>
           </div>
 
@@ -242,7 +242,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
           </div>
 
           {/* Carousel Dots at Bottom Left (Matching Mockup with 5 Dots) */}
-          <div className="relative z-10 flex items-center gap-2 mt-auto pt-4">
+          <div className="relative z-10 flex items-center gap-1.5 sm:gap-2 mt-auto pt-2 sm:pt-4">
             {slides.map((_, idx) => (
               <button
                 key={idx}
@@ -259,7 +259,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
         </div>
 
         {/* Right Column: 2 Promo Cards (Download App Removed) */}
-        <div className="lg:col-span-3 flex flex-col gap-3 justify-between h-[425px]">
+        <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col gap-3 justify-between h-auto lg:h-[425px]">
           {/* Card 1: New User? Get Rs. 1,000 OFF */}
           <div className="bg-linear-to-br from-[#fff1f2] via-[#ffe4e6] to-[#fecdd3] rounded-xl border border-pink-200 p-5 flex flex-col justify-between shadow-2xs group flex-1">
             <div>
