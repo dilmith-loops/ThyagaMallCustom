@@ -70,16 +70,17 @@ export default function BestSellersSection() {
   return (
     <section className="my-6 bg-white rounded-xl border border-gray-200 shadow-2xs p-4 sm:p-5">
       {/* Header with Filter Pills */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-gray-100">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 mb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between md:justify-start gap-4 w-full md:w-auto">
           <div className="flex items-center gap-2">
             <Award className="w-4 h-4 text-[#36135d]" />
-            <h2 className="text-base sm:text-lg font-black text-gray-900 tracking-tight font-poppins">
+            <h2 className="text-base sm:text-lg font-black text-gray-900 tracking-tight font-poppins shrink-0">
               Best Sellers
             </h2>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-semibold">
+          {/* Desktop Filter Pills */}
+          <div className="hidden md:flex items-center gap-2 text-xs font-semibold">
             {['All', 'Electronics', 'Home', 'Fashion', 'Beauty'].map((tab) => (
               <button
                 key={tab}
@@ -94,11 +95,38 @@ export default function BestSellersSection() {
               </button>
             ))}
           </div>
+
+          {/* Mobile View All on Top Row */}
+          <Link
+            href="/shop?sort=popular"
+            className="md:hidden text-xs font-bold text-[#6d28d9] hover:text-[#5b21b6] flex items-center gap-1 group shrink-0"
+          >
+            <span>View All</span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
 
+        {/* Mobile Filter Pills (Horizontal Scroll) */}
+        <div className="flex md:hidden items-center gap-2 text-xs font-semibold overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
+          {['All', 'Electronics', 'Home', 'Fashion', 'Beauty'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3.5 py-1.5 rounded-full transition cursor-pointer text-xs shrink-0 select-none ${
+                activeTab === tab
+                  ? 'bg-[#6d28d9] text-white font-bold shadow-2xs'
+                  : 'text-gray-600 hover:text-gray-900 bg-gray-100'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop View All */}
         <Link
           href="/shop?sort=popular"
-          className="text-xs font-bold text-[#6d28d9] hover:text-[#5b21b6] flex items-center gap-1 group self-start sm:self-auto"
+          className="hidden md:flex text-xs font-bold text-[#6d28d9] hover:text-[#5b21b6] items-center gap-1 group shrink-0"
         >
           <span>View All</span>
           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
