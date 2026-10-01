@@ -17,10 +17,22 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 // Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
 
+// Clean any stale bootstrap cache files on host
+foreach (glob(__DIR__.'/../bootstrap/cache/*.php') as $cacheFile) {
+    if (basename($cacheFile) !== '.gitignore') {
+        @unlink($cacheFile);
+    }
+}
+
 try {
     // Bootstrap Laravel and handle the request...
     /** @var Application $app */
     $app = require_once __DIR__.'/../bootstrap/app.php';
+
+    // Ensure view factory is bound for error rendering
+    if (! $app->bound('view')) {
+        $app->register(\Illuminate\View\ViewServiceProvider::class);
+    }
 
     // Normalize subfolder prefix if hosted under /ThyagaMall/api
     if (isset($_SERVER['REQUEST_URI'])) {
