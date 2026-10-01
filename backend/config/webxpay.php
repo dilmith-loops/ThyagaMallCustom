@@ -26,9 +26,11 @@ return [
     | Retrieve these from your WebXpay Merchant Portal:
     | Portal: https://merchant.webxpay.com/ -> Settings -> Website Integration
     */
-    'merchant_id' => env('WEBXPAY_MERCHANT_ID', ''),
-    'secret_key'  => env('WEBXPAY_SECRET_KEY', ''),
-    'public_key'  => env('WEBXPAY_PUBLIC_KEY', ''),
+    'merchant_id'  => env('WEBXPAY_MERCHANT_ID', ''),
+    'secret_key'   => env('WEBXPAY_SECRET_KEY', ''),
+    'public_key'   => env('WEBXPAY_PUBLIC_KEY', ''),
+    'api_username' => env('WEBXPAY_API_USERNAME', ''),
+    'api_password' => env('WEBXPAY_API_PASSWORD', ''),
 
     /*
     |--------------------------------------------------------------------------

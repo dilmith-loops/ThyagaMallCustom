@@ -13,6 +13,8 @@ class WebxpayService
     protected string $merchantId;
     protected string $secretKey;
     protected string $publicKey;
+    protected string $apiUsername;
+    protected string $apiPassword;
     protected string $currency;
     protected ?string $returnUrl;
     protected string $frontendUrl;
@@ -28,6 +30,8 @@ class WebxpayService
         $this->merchantId = config('webxpay.merchant_id', '');
         $this->secretKey = config('webxpay.secret_key', '');
         $this->publicKey = config('webxpay.public_key', '');
+        $this->apiUsername = config('webxpay.api_username', '');
+        $this->apiPassword = config('webxpay.api_password', '');
         $this->currency = config('webxpay.currency', 'LKR');
         $this->returnUrl = config('webxpay.return_url') ?: url('/api/payment/webxpay/callback');
         $this->frontendUrl = rtrim(config('webxpay.frontend_url', 'https://ai.loopsintegrated.co/ThyagaMall'), '/');
@@ -94,6 +98,10 @@ class WebxpayService
 
         if (!empty($this->secretKey)) {
             $fields['secret_key'] = $this->secretKey;
+        }
+
+        if (!empty($this->apiUsername)) {
+            $fields['api_username'] = $this->apiUsername;
         }
 
         // Advanced WebXpay payload signing (if secret/private key is available)
