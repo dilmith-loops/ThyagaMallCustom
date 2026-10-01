@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
-import { ShieldCheck, Truck, CreditCard, Ticket, CheckCircle2, ChevronRight, Lock, Loader2, User } from 'lucide-react';
+import { getAssetUrl } from '@/utils/assets';
+import { ShieldCheck, Truck, CreditCard, Ticket, CheckCircle2, ChevronRight, Lock, Loader2, User, AlertCircle } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -50,6 +51,17 @@ export default function CheckoutPage() {
   const [voucherMessage, setVoucherMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get('payment_error');
+      if (err) {
+        setPaymentError(decodeURIComponent(err));
+      }
+    }
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -84,6 +96,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setPaymentError(null);
 
     try {
       const orderPayload = {
@@ -105,6 +118,26 @@ export default function CheckoutPage() {
       const res = await api.createOrder(orderPayload);
       if (res.success && res.data) {
         clearCart();
+
+        // If WebXpay redirect is required, dynamically create and submit POST form
+        if (res.data.redirect_required && res.data.payment_url && res.data.payment_params) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = res.data.payment_url;
+
+          Object.entries(res.data.payment_params).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = String(value);
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+          return;
+        }
+
         router.push(`/order-success/${res.data.order_number}`);
       }
     } catch (err: unknown) {
@@ -124,6 +157,20 @@ export default function CheckoutPage() {
         <ChevronRight className="w-3 h-3" />
         <span className="font-semibold text-gray-800">Secure Checkout</span>
       </div>
+
+      {/* Gateway Return Error Notification */}
+      {paymentError && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-3 shadow-xs">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-1">
+            <strong className="font-bold text-sm block text-amber-950">Payment Unsuccessful or Cancelled</strong>
+            <p className="text-amber-800">{paymentError}</p>
+            <p className="text-[11px] text-amber-700">
+              Your items are still safely saved. You can retry with WebXpay or choose Cash on Delivery (COD) below.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Checkout Form */}
@@ -279,7 +326,7 @@ export default function CheckoutPage() {
                 </div>
               </label>
 
-              {/* Option 2: Card Payment */}
+              {/* Option 2: Card Payment (WebXpay) */}
               <label
                 className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition cursor-pointer ${
                   formData.payment_method === 'card' ? 'border-[#36135d] bg-purple-50/50' : 'border-gray-200 hover:border-gray-300'
@@ -294,11 +341,20 @@ export default function CheckoutPage() {
                   className="mt-0.5 text-[#36135d] focus:ring-[#36135d]"
                 />
                 <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-900">Credit / Debit Card (Visa, Mastercard)</span>
-                    <CreditCard className="w-4 h-4 text-gray-400" />
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
+                    <span className="text-xs font-bold text-gray-900">
+                      Credit / Debit Card (WebXpay Gateway)
+                    </span>
+                    <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200/60">
+                      <img src={getAssetUrl('/payments/visa.svg')} alt="Visa" className="h-3 object-contain" />
+                      <img src={getAssetUrl('/payments/mastercard.svg')} alt="Mastercard" className="h-3 object-contain" />
+                      <img src={getAssetUrl('/payments/amex.svg')} alt="AMEX" className="h-3 object-contain" />
+                      <img src={getAssetUrl('/payments/genie.svg')} alt="Genie" className="h-3 object-contain" />
+                    </div>
                   </div>
-                  <p className="text-[11px] text-gray-500">Instant and encrypted online card transaction.</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    Secure online transaction via official WebXpay gateway. Supports Visa, Mastercard, AMEX & mobile wallets.
+                  </p>
                 </div>
               </label>
 
@@ -344,12 +400,20 @@ export default function CheckoutPage() {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Processing Order...</span>
+                <span>
+                  {formData.payment_method === 'card'
+                    ? 'Connecting to WebXpay...'
+                    : 'Processing Order...'}
+                </span>
               </>
             ) : (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Place Order (Rs. {total.toLocaleString('en-US', { minimumFractionDigits: 2 })})</span>
+                <span>
+                  {formData.payment_method === 'card'
+                    ? `Proceed to WebXpay (Rs. ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })})`
+                    : `Place Order (Rs. ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })})`}
+                </span>
               </>
             )}
           </button>

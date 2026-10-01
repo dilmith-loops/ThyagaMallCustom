@@ -27,7 +27,7 @@ class OrderController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'voucher_code' => 'nullable|string',
-            'payment_method' => 'required|string|in:cod,card,voucher,voucher_cod',
+            'payment_method' => 'required|string|in:cod,card,webxpay,voucher,voucher_cod',
             'notes' => 'nullable|string',
         ]);
 
@@ -81,6 +81,9 @@ class OrderController extends Controller
                     ->value('id');
             }
 
+            $isOnlinePayment = in_array($validated['payment_method'], ['card', 'webxpay']) && $total > 0;
+            $paymentStatus = ($validated['payment_method'] === 'voucher' && $total == 0) ? 'paid' : 'pending';
+
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'user_id' => $userId,
@@ -96,7 +99,7 @@ class OrderController extends Controller
                 'total' => $total,
                 'voucher_code' => $voucherCode,
                 'payment_method' => $validated['payment_method'],
-                'payment_status' => $validated['payment_method'] === 'card' ? 'paid' : 'pending',
+                'payment_status' => $paymentStatus,
                 'order_status' => 'pending',
                 'notes' => $validated['notes'] ?? null,
             ]);
@@ -106,17 +109,31 @@ class OrderController extends Controller
                 OrderItem::create($itemData);
             }
 
+            $responseData = [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'total' => $order->total,
+                'shipping_fee' => $order->shipping_fee,
+                'discount' => $order->discount,
+                'order_status' => $order->order_status,
+                'payment_method' => $order->payment_method,
+                'payment_status' => $order->payment_status,
+            ];
+
+            if ($isOnlinePayment) {
+                $webxpayService = app(\App\Services\WebxpayService::class);
+                $paymentPayload = $webxpayService->preparePaymentPayload($order);
+                $responseData['payment_url'] = $paymentPayload['gateway_url'];
+                $responseData['payment_params'] = $paymentPayload['params'];
+                $responseData['redirect_required'] = true;
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Thank you! Your order has been placed successfully.',
-                'data' => [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'total' => $order->total,
-                    'shipping_fee' => $order->shipping_fee,
-                    'discount' => $order->discount,
-                    'order_status' => $order->order_status,
-                ],
+                'message' => $isOnlinePayment 
+                    ? 'Order placed. Redirecting to WebXpay secure gateway...' 
+                    : 'Thank you! Your order has been placed successfully.',
+                'data' => $responseData,
             ], 201);
         });
     }

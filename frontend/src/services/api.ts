@@ -203,11 +203,30 @@ export const api = {
       shipping_fee: number;
       discount: number;
       order_status: string;
+      payment_method?: string;
+      payment_status?: string;
+      payment_url?: string;
+      payment_params?: Record<string, string>;
+      redirect_required?: boolean;
     };
   }> {
     return fetcher('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
+    });
+  },
+
+  async initiateWebxpay(orderNumber: string): Promise<{
+    success: boolean;
+    data: {
+      gateway_url: string;
+      params: Record<string, string>;
+      order_number: string;
+      total: number;
+    };
+  }> {
+    return fetcher(`/payment/webxpay/initiate/${orderNumber}`, {
+      method: 'POST',
     });
   },
 

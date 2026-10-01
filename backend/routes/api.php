@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CustomerAuthController;
+use App\Http\Controllers\Api\Payment\WebxpayController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -76,6 +77,12 @@ Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
 Route::prefix('orders')->group(function () {
     Route::post('/', [OrderController::class, 'store']);
     Route::get('/{order_number}', [OrderController::class, 'show']);
+});
+
+// WebXpay Payment Gateway Endpoints
+Route::prefix('payment/webxpay')->group(function () {
+    Route::post('/initiate/{order_number}', [WebxpayController::class, 'initiate']);
+    Route::match(['get', 'post'], '/callback', [WebxpayController::class, 'callback'])->name('payment.webxpay.callback');
 });
 
 // Admin Authentication (Public)
