@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 50" width="160" height="50" fill="none">
+  <!-- Delivery Truck / Cash Icon -->
+  <g transform="translate(8, 7)">
+    <!-- Truck Cab -->
+    <path d="M2 8C2 6.34315 3.34315 5 5 5H21V29H4C2.89543 29 2 28.1046 2 27V8Z" fill="#059669" />
+    <path d="M22 10H28.5C29.4283 10 30.2974 10.4289 30.866 11.1547L34.2321 15.4385C34.7268 16.068 35 16.8457 35 17.6469V27C35 28.1046 34.1046 29 33 29H22V10Z" fill="#10B981" />
+    <!-- Truck Window -->
+    <path d="M23 12H27.5L30.5 16H23V12Z" fill="#E6FFFA" />
+    <!-- Wheels -->
+    <circle cx="10" cy="29" r="4.5" fill="#1F2937" />
+    <circle cx="10" cy="29" r="2" fill="#9CA3AF" />
+    <circle cx="28" cy="29" r="4.5" fill="#1F2937" />
+    <circle cx="28" cy="29" r="2" fill="#9CA3AF" />
+    <!-- Dollar / Rs sign on truck cargo -->
+    <circle cx="11.5" cy="17" r="5.5" fill="#047857" />
+    <text x="8.5" y="20.5" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="900" fill="#FFFFFF">Rs</text>
+  </g>
+  <!-- Text -->
+  <g transform="translate(50, 14)">
+    <text x="0" y="12" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="900" fill="#065F46" letter-spacing="0.5">COD</text>
+    <text x="0" y="25" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="9" font-weight="700" fill="#059669" letter-spacing="0.3">CASH ON DELIVERY</text>
+  </g>
+</svg>

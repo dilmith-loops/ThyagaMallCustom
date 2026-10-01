@@ -19,9 +19,8 @@
 /public/hot
 /public/storage
 /storage/*.key
-/storage/pail
-/vendor
-_ide_helper.php
+# /vendor included for direct Hostinger Git deployment without SSH
+
 Homestead.json
 Homestead.yaml
 Thumbs.db
