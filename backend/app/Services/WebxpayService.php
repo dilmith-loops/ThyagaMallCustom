@@ -33,8 +33,8 @@ class WebxpayService
         $this->apiUsername = config('webxpay.api_username', '');
         $this->apiPassword = config('webxpay.api_password', '');
         $this->currency = config('webxpay.currency', 'LKR');
-        $this->returnUrl = config('webxpay.return_url') ?: url('/api/payment/webxpay/callback');
         $this->frontendUrl = rtrim(config('webxpay.frontend_url', 'https://ai.loopsintegrated.co/ThyagaMall'), '/');
+        $this->returnUrl = config('webxpay.return_url') ?: ($this->frontendUrl . '/api/payment/webxpay/callback');
     }
 
     /**
@@ -104,9 +104,23 @@ class WebxpayService
             $fields['api_username'] = $this->apiUsername;
         }
 
-        // Advanced WebXpay payload signing (if secret/private key is available)
-        $paymentDataString = "{$order->order_number}|{$price}|{$this->currency}";
-        $fields['payment'] = base64_encode($paymentDataString);
+        // Encrypt payment payload using WebXPay RSA Public Key (Format: order_id|total_amount)
+        $paymentPlaintext = "{$order->order_number}|{$price}";
+
+        if (!empty($this->publicKey)) {
+            $formattedKey = $this->formatPublicKey($this->publicKey);
+            $publicKeyResource = @openssl_pkey_get_public($formattedKey);
+            $encryptedData = '';
+
+            if ($publicKeyResource && @openssl_public_encrypt($paymentPlaintext, $encryptedData, $publicKeyResource, OPENSSL_PKCS1_PADDING)) {
+                $fields['payment'] = base64_encode($encryptedData);
+            } else {
+                Log::error('WebXpay RSA encryption failed: ' . openssl_error_string());
+                $fields['payment'] = base64_encode($paymentPlaintext);
+            }
+        } else {
+            $fields['payment'] = base64_encode($paymentPlaintext);
+        }
 
         return [
             'gateway_url' => $this->checkoutUrl,
