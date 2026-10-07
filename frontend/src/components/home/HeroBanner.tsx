@@ -157,7 +157,7 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
 
         {/* Center Column: Main Hero Promo Banner (Fixed Proportional Height) */}
         <div
-          className="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-[#240046] text-white p-3.5 sm:p-6 md:p-8 h-[210px] sm:h-[330px] lg:h-[425px] group select-none"
+          className="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-[#240046] text-white p-4 sm:p-7 md:p-8 min-h-[230px] h-[230px] sm:h-[340px] lg:h-[425px] group select-none"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
@@ -173,11 +173,11 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
             />
             {/* Seamless Left Gradient Overlay ensuring crisp typography contrast */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1c0036] via-[#1c0036]/90 sm:via-[#20003e]/65 via-55% sm:via-45% to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#17002c] via-[#17002c]/90 sm:via-[#1c0036]/75 via-55% sm:via-45% to-transparent pointer-events-none" />
           </div>
 
           {/* Scalloped Starburst Rosette Badge Top Right */}
-          <div className="absolute top-2.5 right-2.5 sm:top-5 sm:right-6 w-12 h-12 sm:w-20 sm:h-20 md:w-24 md:h-24 z-20 transition-transform duration-300 hover:scale-105 drop-shadow-md animate-pulse-subtle">
+          <div className="absolute top-3 right-3 sm:top-5 sm:right-6 w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 z-20 transition-transform duration-300 hover:scale-105 drop-shadow-md animate-pulse-subtle">
             <svg
               viewBox="0 0 100 100"
               className="w-full h-full fill-[#ff007f]"
@@ -186,44 +186,41 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
               <path d="M 90.00 50.00 Q 97.08 59.36 86.96 65.31 Q 89.91 76.67 78.28 78.28 Q 76.67 89.91 65.31 86.96 Q 59.36 97.08 50.00 90.00 Q 40.64 97.08 34.69 86.96 Q 23.33 89.91 21.72 78.28 Q 10.09 76.67 13.04 65.31 Q 2.92 59.36 10.00 50.00 Q 2.92 40.64 13.04 34.69 Q 10.09 23.33 21.72 21.72 Q 23.33 10.09 34.69 13.04 Q 40.64 2.92 50.00 10.00 Q 59.36 2.92 65.31 13.04 Q 76.67 10.09 78.28 21.72 Q 89.91 23.33 86.96 34.69 Q 97.08 40.64 90.00 50.00 Z" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white pointer-events-none select-none px-1">
-              <span className="text-[6.5px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
+              <span className="text-[7px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
                 {activeSlide.discountUpTo}
               </span>
-              <span className="text-xs sm:text-xl md:text-2xl font-black leading-tight tracking-tight my-0.5 text-white drop-shadow-xs">
+              <span className="text-sm sm:text-xl md:text-2xl font-black leading-tight tracking-tight my-0.5 text-white drop-shadow-xs">
                 {activeSlide.discountValue}
               </span>
-              <span className="text-[6.5px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
+              <span className="text-[7px] sm:text-[9px] font-black tracking-wider uppercase leading-none opacity-95">
                 {activeSlide.discountOff}
               </span>
             </div>
           </div>
 
-          {/* Left Typography & CTA Content */}
-          <div className="relative z-10 max-w-[210px] sm:max-w-xs md:max-w-sm mt-0 sm:mt-2 md:mt-4">
-            <h1 className="text-lg sm:text-2xl md:text-[32px] lg:text-[36px] font-black tracking-tight text-white mb-1 sm:mb-3 drop-shadow-xs font-poppins space-y-0.5 sm:space-y-1 leading-tight">
+          {/* Left Typography & CTA Content (Vertically centered for optimal visual balance) */}
+          <div className="relative z-10 max-w-[270px] xs:max-w-xs sm:max-w-sm md:max-w-md my-auto flex flex-col justify-center">
+            <h1 className="text-xl sm:text-2xl md:text-[32px] lg:text-[36px] font-black tracking-tight text-white mb-1.5 sm:mb-2.5 drop-shadow-xs font-poppins leading-[1.15]">
               <span className="block">{activeSlide.titleLine1}</span>
-              <span className="block">{activeSlide.titleLine2}</span>
+              <span className="block text-white/95">{activeSlide.titleLine2}</span>
             </h1>
 
-            <div className="space-y-0.5 sm:space-y-1 mb-2.5 sm:mb-5 md:mb-7">
-              <p className="text-[11px] sm:text-sm text-purple-100 font-medium leading-snug">
-                {activeSlide.subtext}
-              </p>
-              <p className="hidden xs:block sm:block text-[10px] sm:text-xs text-purple-200/80 font-normal leading-tight">
-                {activeSlide.subtext2}
-              </p>
-            </div>
+            <p className="text-xs sm:text-sm text-purple-100 font-medium leading-snug mb-3.5 sm:mb-5 max-w-[240px] sm:max-w-xs md:max-w-sm">
+              {activeSlide.subtext}
+            </p>
 
-            <Link
-              href={activeSlide.link}
-              className="inline-flex items-center gap-1.5 sm:gap-2.5 bg-white text-[#2b0054] hover:bg-purple-50 hover:text-[#3c096c] px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group/btn cursor-pointer"
-            >
-              <span className="tracking-tight">{activeSlide.cta}</span>
-              <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#2b0054] group-hover/btn:translate-x-1 transition-transform duration-200" />
-            </Link>
+            <div>
+              <Link
+                href={activeSlide.link}
+                className="inline-flex items-center gap-2 bg-white text-[#2b0054] hover:bg-purple-50 hover:text-[#3c096c] px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group/btn cursor-pointer w-fit"
+              >
+                <span className="tracking-tight">{activeSlide.cta}</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2b0054] group-hover/btn:translate-x-1 transition-transform duration-200" />
+              </Link>
+            </div>
           </div>
 
-          {/* Navigation Arrows on Hover (Desktop Bottom Right - completely clear of text) */}
+          {/* Navigation Arrows on Hover (Desktop Bottom Right) */}
           <div className="hidden sm:flex absolute bottom-4 right-5 sm:bottom-5 sm:right-6 z-20 items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button
               onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
@@ -241,16 +238,16 @@ export default function HeroBanner({ categories }: HeroBannerProps) {
             </button>
           </div>
 
-          {/* Carousel Dots at Bottom Left (Matching Mockup with 5 Dots) */}
-          <div className="relative z-10 flex items-center gap-1.5 sm:gap-2 mt-auto pt-1 sm:pt-4">
+          {/* Carousel Dots at Bottom Left (Anchored cleanly with dedicated positioning) */}
+          <div className="absolute bottom-3 left-4 sm:bottom-4 sm:left-6 md:left-8 z-10 flex items-center gap-1.5 sm:gap-2">
             {slides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`rounded-full transition-all duration-300 cursor-pointer ${
+                className={`transition-all duration-300 cursor-pointer ${
                   currentSlide === idx
-                    ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white shadow-xs ring-2 ring-white/30'
-                    : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/40 hover:bg-white/70'
+                    ? 'w-5 sm:w-6 h-1.5 sm:h-2 bg-white rounded-full shadow-xs'
+                    : 'w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-white/40 hover:bg-white/70'
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
