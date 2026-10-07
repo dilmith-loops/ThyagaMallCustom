@@ -272,11 +272,12 @@ class WebxpayService
      */
     public function getFrontendRedirectUrl(string $orderNumber, bool $isSuccess, ?string $errorMessage = null): string
     {
+        $base = rtrim($this->frontendUrl, '/');
         if ($isSuccess) {
-            return "{$this->frontendUrl}/order-success/{$orderNumber}?payment=paid";
+            return "{$base}/order-success/?order={$orderNumber}&payment=paid";
         }
 
         $errorMsg = urlencode($errorMessage ?: 'Payment could not be completed. Please try again.');
-        return "{$this->frontendUrl}/checkout?payment_error={$errorMsg}&order={$orderNumber}";
+        return "{$base}/checkout/?payment_error={$errorMsg}&order={$orderNumber}";
     }
 }

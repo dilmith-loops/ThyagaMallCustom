@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import OrderSuccessClient from './OrderSuccessClient';
 
 export function generateStaticParams() {
   return [
-    { orderNumber: '[orderNumber]' },
     { orderNumber: 'preview' },
   ];
 }
 
 export default function OrderSuccessPage() {
-  return <OrderSuccessClient />;
+  return (
+    <Suspense fallback={null}>
+      <OrderSuccessClient />
+    </Suspense>
+  );
 }

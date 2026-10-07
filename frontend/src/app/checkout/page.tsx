@@ -315,6 +315,11 @@ export default function CheckoutPage() {
       const res = await api.createOrder(orderPayload);
       if (res.success && res.data) {
         clearCart();
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('thyaga_last_order', JSON.stringify({ order_number: res.data.order_number }));
+          } catch (_) {}
+        }
 
         // If WebXpay redirect is required, dynamically create and submit POST form
         if (res.data.redirect_required && res.data.payment_url && res.data.payment_params) {
@@ -335,7 +340,7 @@ export default function CheckoutPage() {
           return;
         }
 
-        router.push(`/order-success/${res.data.order_number}`);
+        router.push(`/order-success/?order=${res.data.order_number}`);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to place order. Please try again.');

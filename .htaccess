@@ -23,8 +23,8 @@
     RewriteRule ^product/[^/]+/?$ product/[slug]/index.html [L]
 
     # 5. Dynamic Order Success route fallback
-    RewriteCond %{REQUEST_URI} ^/ThyagaMall/order-success/
-    RewriteRule ^order-success/[^/]+/?$ order-success/[orderNumber]/index.html [L]
+    RewriteCond %{REQUEST_URI} (^/ThyagaMall)?/order-success [NC]
+    RewriteRule ^order-success(/.*)?$ order-success/index.html [L]
 
     # 6. Fallback clean URLs (.html extension)
     RewriteCond %{DOCUMENT_ROOT}/ThyagaMall/$1.html -f
