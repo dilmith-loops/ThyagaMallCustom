@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Zap, ArrowRight, Heart, ShoppingBag } from 'lucide-react';
 import { FlashSale } from '@/types';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 interface FlashSaleSectionProps {
   flashSale?: FlashSale | null;
@@ -13,6 +14,7 @@ interface FlashSaleSectionProps {
 
 export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [activeTab, setActiveTab] = useState('All Deals');
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
 
@@ -184,11 +186,14 @@ export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    toggleWishlist(product);
                   }}
-                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 shadow-2xs flex items-center justify-center text-gray-400 hover:text-red-500 cursor-pointer"
+                  className={`absolute top-2 right-2 w-7 h-7 rounded-full bg-white/95 shadow-xs flex items-center justify-center transition cursor-pointer ${
+                    isInWishlist(product.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'
+                  }`}
                   aria-label="Save to Wishlist"
                 >
-                  <Heart className="w-3.5 h-3.5" />
+                  <Heart className={`w-3.5 h-3.5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                 </button>
               </Link>
 

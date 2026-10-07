@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShoppingBag, Star, Heart, Check } from 'lucide-react';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 interface ProductCardProps {
   product: Product;
@@ -14,8 +15,9 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, flashPrice }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [isAdded, setIsAdded] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = isInWishlist(product.id);
   const [imgError, setImgError] = useState(false);
 
   const regularPrice = Number(product.regular_price);
@@ -38,7 +40,7 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    toggleWishlist(product);
   };
 
   const imageUrl = !imgError && product.primary_image

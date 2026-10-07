@@ -5,15 +5,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Store, Heart, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function BottomNavBar() {
   const pathname = usePathname();
   const { cartCount, openDrawer } = useCart();
+  const { wishlistCount } = useWishlist();
   const { isAuthenticated } = useAuth();
-
-  // Wishlist count (defaults to 0 or local storage count)
-  const wishlistCount = 0;
 
   const isShopActive = pathname === '/' || pathname === '/shop' || pathname?.startsWith('/category') || pathname?.startsWith('/product');
   const isWishlistActive = pathname === '/wishlist';

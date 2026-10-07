@@ -3,6 +3,7 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
+import { WishlistProvider } from '@/context/WishlistContext';
 import { FlashSaleProvider } from '@/context/FlashSaleContext';
 import StorefrontShell from '@/components/layout/StorefrontShell';
 
@@ -37,11 +38,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#f8f9fa] text-gray-900 font-sans">
         <AuthProvider>
           <CartProvider>
-            <FlashSaleProvider>
-              <StorefrontShell>
-                {children}
-              </StorefrontShell>
-            </FlashSaleProvider>
+            <WishlistProvider>
+              <FlashSaleProvider>
+                <StorefrontShell>
+                  {children}
+                </StorefrontShell>
+              </FlashSaleProvider>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

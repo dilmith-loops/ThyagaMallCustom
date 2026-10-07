@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Search, ShoppingBag, Heart, User, ChevronDown, Package, LogOut } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { Category } from '@/types';
@@ -14,6 +15,7 @@ import { getAssetUrl } from '@/utils/assets';
 export default function Header() {
   const router = useRouter();
   const { cartCount, openDrawer } = useCart();
+  const { wishlistCount } = useWishlist();
   const { user, isAuthenticated, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -153,11 +155,16 @@ export default function Header() {
 
           {/* Wishlist */}
           <Link
-            href="/shop"
+            href="/wishlist"
             className="flex items-center gap-2 hover:text-[#36135d] transition group"
           >
             <div className="relative">
               <Heart className="w-5 h-5 text-gray-700 group-hover:text-[#e11d48] transition" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-[#e11d48] text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {wishlistCount}
+                </span>
+              )}
             </div>
             <div className="hidden lg:flex flex-col text-left leading-tight">
               <span className="text-[10px] text-gray-400">Wishlist</span>

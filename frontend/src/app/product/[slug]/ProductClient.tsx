@@ -18,10 +18,12 @@ import {
   Flame,
   Zap,
   Loader2,
+  Heart,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/product/ProductCard';
 
 export default function ProductClient() {
@@ -40,6 +42,7 @@ export default function ProductClient() {
   });
 
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
@@ -284,11 +287,11 @@ export default function ProductClient() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock_quantity <= 0}
-                className="w-full bg-[#36135d] hover:bg-[#250b42] text-white py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
+                className="flex-1 w-full bg-[#36135d] hover:bg-[#250b42] text-white py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
               >
                 {isAdded ? <Check className="w-4 h-4 text-emerald-400" /> : <ShoppingBag className="w-4 h-4" />}
                 <span>{isAdded ? 'Added to Cart!' : 'Add to Cart'}</span>
@@ -297,10 +300,24 @@ export default function ProductClient() {
               <button
                 onClick={handleBuyNow}
                 disabled={product.stock_quantity <= 0}
-                className="w-full bg-[#a7144c] hover:bg-[#8c0f3f] text-white py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
+                className="flex-1 w-full bg-[#a7144c] hover:bg-[#8c0f3f] text-white py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
               >
                 <Zap className="w-4 h-4" />
                 <span>Buy Now</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => product && toggleWishlist(product)}
+                className={`p-3.5 rounded-xl border transition flex items-center justify-center cursor-pointer shrink-0 ${
+                  product && isInWishlist(product.id)
+                    ? 'border-rose-200 bg-rose-50 text-rose-600'
+                    : 'border-gray-200 text-gray-500 hover:text-rose-600 hover:bg-rose-50/50'
+                }`}
+                title={product && isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                aria-label="Wishlist"
+              >
+                <Heart className={`w-5 h-5 ${product && isInWishlist(product.id) ? 'fill-current' : ''}`} />
               </button>
             </div>
           </div>
