@@ -20,6 +20,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
 import { Admin } from '@/types';
 import { getAssetUrl } from '@/utils/assets';
@@ -29,52 +30,74 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   const [adminUser, setAdminUser] = useState<Admin | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Strictly identify login route (never false-positive on dashboard or other admin routes)
   const isLoginPage = Boolean(
-    pathname?.includes('/login') ||
-    (typeof window !== 'undefined' && window.location.pathname.includes('/login'))
+    pathname?.endsWith('/login') ||
+    pathname?.endsWith('/login/') ||
+    pathname === '/thyaga-portal-admin/login' ||
+    pathname === '/thyaga-portal-admin/login/'
   );
 
   useEffect(() => {
-    const saved = localStorage.getItem('thyaga_admin_sidebar_collapsed');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('thyaga_admin_token') : null;
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('thyaga_admin_user') : null;
+
+    if (token) {
+      setIsAuthenticated(true);
+      if (userStr) {
+        try {
+          setAdminUser(JSON.parse(userStr));
+        } catch {
+          // ignore
+        }
+      }
+    } else {
+      setIsAuthenticated(false);
+      setAdminUser(null);
+      if (!isLoginPage) {
+        window.location.href = '/thyaga-portal-admin/login/';
+      }
+    }
+  }, [pathname, isLoginPage]);
+
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('thyaga_admin_sidebar_collapsed') : null;
     if (saved !== null) {
       setIsCollapsed(saved === 'true');
     }
   }, []);
 
-  useEffect(() => {
-    if (isLoginPage) return;
-
-    const token = localStorage.getItem('thyaga_admin_token');
-    const userStr = localStorage.getItem('thyaga_admin_user');
-
-    if (!token) {
-      router.push('/thyaga-portal-admin/login');
-      return;
-    }
-
-    if (userStr) {
-      try {
-        setAdminUser(JSON.parse(userStr));
-      } catch {
-        // ignore
-      }
-    }
-  }, [pathname, isLoginPage, router]);
-
   const handleLogout = () => {
     localStorage.removeItem('thyaga_admin_token');
     localStorage.removeItem('thyaga_admin_user');
+    setIsAuthenticated(false);
+    setAdminUser(null);
     setShowLogoutModal(false);
-    router.push('/thyaga-portal-admin/login');
+    window.location.href = '/thyaga-portal-admin/login/';
   };
 
+  // If on login page, show ONLY the login section (no sidebar, no header)
   if (isLoginPage) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center w-full p-4 sm:p-6">
         {children}
+      </div>
+    );
+  }
+
+  // If not logged in, redirecting to login (no sidebar, no header)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center w-full p-4 sm:p-6">
+        <div className="flex flex-col items-center gap-3 text-gray-500">
+          <Loader2 className="w-8 h-8 animate-spin text-[#36135d]" />
+          <span className="text-xs font-semibold">Redirecting to login...</span>
+        </div>
       </div>
     );
   }

@@ -18,9 +18,9 @@ export default function AdminLoginPage() {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('thyaga_admin_token') : null;
     if (token) {
-      router.replace('/thyaga-portal-admin/dashboard');
+      window.location.href = '/thyaga-portal-admin/dashboard/';
     }
-  }, [router]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
       if (res.success && res.token) {
         localStorage.setItem('thyaga_admin_token', res.token);
         localStorage.setItem('thyaga_admin_user', JSON.stringify(res.admin));
-        router.push('/thyaga-portal-admin/dashboard');
+        window.location.href = '/thyaga-portal-admin/dashboard/';
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid admin credentials');
