@@ -107,6 +107,9 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::get('/stats', [AdminDashboardController::class, 'stats']);
 
     // Products Management
+    Route::get('/products/export', [AdminProductController::class, 'export']);
+    Route::get('/products/template', [AdminProductController::class, 'sampleTemplate']);
+    Route::post('/products/import', [AdminProductController::class, 'import']);
     Route::get('/products', [AdminProductController::class, 'index']);
     Route::post('/products', [AdminProductController::class, 'store']);
     Route::put('/products/{id}', [AdminProductController::class, 'update']);

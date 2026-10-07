@@ -14,6 +14,11 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { Product, Category, Merchant } from '@/types';
@@ -27,6 +32,26 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
   const [selectedMerchant, setSelectedMerchant] = useState<number | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Export State
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Import Modal State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importUpdateExisting, setImportUpdateExisting] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importPreviewRows, setImportPreviewRows] = useState<any[]>([]);
+  const [importTotalCount, setImportTotalCount] = useState<number>(0);
+  const [importResult, setImportResult] = useState<{
+    success: boolean;
+    message: string;
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors?: string[];
+  } | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -175,21 +200,203 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleExport = async () => {
+    const token = localStorage.getItem('thyaga_admin_token') || '';
+    if (!token) return;
+
+    setIsExporting(true);
+    try {
+      const blob = await api.exportAdminProductsCsv(token, {
+        category_id: selectedCategory,
+        merchant_id: selectedMerchant,
+        search: search || undefined,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.download = `thyaga_products_${dateStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setFeedback('Products exported to CSV successfully!');
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await api.getAdminProductsSampleTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'thyaga_products_sample_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch {
+      const csvContent =
+        'Name,SKU,Category,Merchant,Regular Price,Sale Price,Stock Quantity,Short Description,Description,Image URL,Is Featured,Is Active\n' +
+        '"Premium Wireless Bluetooth Earbuds","THY-EAR-001","Electronics","","4500.00","3990.00","100","Crystal-clear audio with deep bass","Experience superior sound with 30-hour battery life.","https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800","1","1"\n' +
+        '"Pure Ceylon Organic Green Tea 100g","THY-TEA-002","Food","","1200.00","","75","Single-origin Ceylon green tea","Handpicked from Nuwara Eliya estates.","https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800","0","1"';
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'thyaga_products_sample_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFile(file);
+    setImportResult(null);
+    setImportError(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split(/\r\n|\n/).filter((l) => l.trim().length > 0);
+      if (lines.length <= 1) {
+        setImportError('The selected CSV file appears to be empty or contains only headers.');
+        setImportPreviewRows([]);
+        setImportTotalCount(0);
+        return;
+      }
+
+      const rawHeaders = lines[0].split(',').map((h) => h.replace(/^["']|["']$/g, '').trim());
+      const cleanHeaders = rawHeaders.map((h) =>
+        h.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+      );
+
+      const preview: any[] = [];
+      for (let i = 1; i < Math.min(lines.length, 6); i++) {
+        const values: string[] = [];
+        let curr = '';
+        let inQuotes = false;
+        for (let j = 0; j < lines[i].length; j++) {
+          const char = lines[i][j];
+          if (char === '"' || char === "'") {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(curr.trim());
+            curr = '';
+          } else {
+            curr += char;
+          }
+        }
+        values.push(curr.trim());
+
+        const rowObj: any = {};
+        cleanHeaders.forEach((key, idx) => {
+          rowObj[key] = (values[idx] || '').replace(/^["']|["']$/g, '');
+        });
+        preview.push(rowObj);
+      }
+
+      setImportTotalCount(lines.length - 1);
+      setImportPreviewRows(preview);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExecuteImport = async () => {
+    if (!importFile) {
+      setImportError('Please choose a CSV file to import.');
+      return;
+    }
+
+    const token = localStorage.getItem('thyaga_admin_token') || '';
+    if (!token) {
+      setImportError('Admin session expired. Please sign in again.');
+      return;
+    }
+
+    setImportLoading(true);
+    setImportError(null);
+    setImportResult(null);
+
+    try {
+      const res = await api.importAdminProducts(token, importFile, importUpdateExisting);
+      setImportResult(res);
+      setFeedback(`Import completed: ${res.imported} added, ${res.updated} updated.`);
+      setTimeout(() => setFeedback(null), 4000);
+      fetchProducts(1);
+    } catch (err: unknown) {
+      setImportError(err instanceof Error ? err.message : 'Import failed');
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Page Title & Add Product Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-xs">
+      {/* Page Title & Action Buttons */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-xs">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900">Product Management</h1>
-          <p className="text-xs text-gray-500">Manage 400+ real Thyaga Mall catalog items, prices & inventory</p>
+          <p className="text-xs text-gray-500">Manage {pagination.total || 400}+ real Thyaga Mall catalog items, prices & inventory</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="bg-[#36135d] hover:bg-[#a7144c] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Export CSV Button */}
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400 text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-2xs cursor-pointer disabled:opacity-50"
+            title="Export filtered or all products to CSV"
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[#36135d]" />
+            ) : (
+              <Download className="w-4 h-4 text-[#36135d]" />
+            )}
+            <span>Export CSV</span>
+          </button>
+
+          {/* Import Products Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsImportModalOpen(true);
+              setImportFile(null);
+              setImportPreviewRows([]);
+              setImportResult(null);
+              setImportError(null);
+            }}
+            className="bg-purple-50 hover:bg-purple-100 text-[#36135d] border border-purple-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-2xs cursor-pointer"
+            title="Import products from a CSV spreadsheet"
+          >
+            <Upload className="w-4 h-4 text-[#36135d]" />
+            <span>Import CSV</span>
+          </button>
+
+          {/* Add New Product Button */}
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="bg-[#36135d] hover:bg-[#a7144c] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Product</span>
+          </button>
+        </div>
       </div>
 
       {feedback && (
@@ -370,6 +577,205 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Import Products Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#36135d] flex items-center justify-center">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Import Products (Bulk CSV)</h3>
+                  <p className="text-xs text-gray-500">Upload a spreadsheet of products to bulk insert or update</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Template Download Card */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                  <span>Pre-formatted CSV Template</span>
+                  <span className="text-[10px] bg-purple-100 text-[#36135d] px-1.5 py-0.2 rounded font-semibold">Recommended</span>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  Includes required columns: Name, SKU, Category, Price, Stock, Image URL, etc.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="text-xs font-bold text-[#36135d] bg-white hover:bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Sample CSV</span>
+              </button>
+            </div>
+
+            {/* File Upload Zone */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-gray-700">Select CSV File</label>
+              <div className="border-2 border-dashed border-gray-300 hover:border-[#36135d] rounded-xl p-5 text-center transition bg-gray-50/50 hover:bg-purple-50/20">
+                <input
+                  type="file"
+                  id="csv-file-input"
+                  accept=".csv,text/csv"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="csv-file-input"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload className="w-8 h-8 text-gray-400 hover:text-[#36135d] transition" />
+                  <div>
+                    <span className="text-xs font-bold text-[#36135d] hover:underline">
+                      Click to choose file
+                    </span>{' '}
+                    <span className="text-xs text-gray-500">or drag and drop</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400">CSV file up to 10MB</p>
+                </label>
+              </div>
+
+              {importFile && (
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-lg text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="font-semibold truncate">{importFile.name}</span>
+                    <span className="text-emerald-600 text-[10px]">({Math.round(importFile.size / 1024)} KB)</span>
+                  </div>
+                  {importTotalCount > 0 && (
+                    <span className="font-bold text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shrink-0">
+                      {importTotalCount} items detected
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Options */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="update-existing-checkbox"
+                checked={importUpdateExisting}
+                onChange={(e) => setImportUpdateExisting(e.target.checked)}
+                className="rounded border-gray-300 text-[#36135d] focus:ring-[#36135d] cursor-pointer"
+              />
+              <label htmlFor="update-existing-checkbox" className="text-xs font-medium text-gray-700 cursor-pointer">
+                Update existing products if product with matching SKU is found
+              </label>
+            </div>
+
+            {/* Preview of rows if available */}
+            {importPreviewRows.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center justify-between">
+                  <span>File Preview (First {importPreviewRows.length} rows)</span>
+                  <span className="text-gray-400 font-normal">Total: {importTotalCount}</span>
+                </div>
+                <div className="max-h-36 overflow-x-auto overflow-y-auto border border-gray-200 rounded-lg text-[11px]">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-100 text-gray-600 sticky top-0">
+                      <tr>
+                        <th className="p-2">Name</th>
+                        <th className="p-2">SKU</th>
+                        <th className="p-2">Category</th>
+                        <th className="p-2">Price</th>
+                        <th className="p-2">Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {importPreviewRows.map((r, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="p-2 font-medium text-gray-900 truncate max-w-[140px]">{r.name || r.product_name || '-'}</td>
+                          <td className="p-2 font-mono text-gray-500">{r.sku || '-'}</td>
+                          <td className="p-2 text-gray-600">{r.category || '-'}</td>
+                          <td className="p-2 font-semibold">Rs. {r.regular_price || r.price || '-'}</td>
+                          <td className="p-2 text-gray-600">{r.stock_quantity || '50'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {importError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{importError}</span>
+              </div>
+            )}
+
+            {/* Result Summary */}
+            {importResult && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs rounded-xl space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-emerald-800">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{importResult.message}</span>
+                </div>
+                <div className="text-[11px] text-emerald-700 flex gap-4">
+                  <span>Added: <strong>{importResult.imported}</strong></span>
+                  <span>Updated: <strong>{importResult.updated}</strong></span>
+                  <span>Skipped: <strong>{importResult.skipped}</strong></span>
+                </div>
+                {importResult.errors && importResult.errors.length > 0 && (
+                  <div className="mt-2 text-[10px] text-amber-800 bg-amber-50 p-2 rounded border border-amber-200">
+                    <span className="font-bold">Warnings:</span>
+                    <ul className="list-disc list-inside mt-0.5 space-y-0.5">
+                      {importResult.errors.map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition cursor-pointer"
+              >
+                {importResult ? 'Close' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteImport}
+                disabled={importLoading || !importFile}
+                className="px-5 py-2 bg-[#36135d] hover:bg-[#a7144c] text-white rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs"
+              >
+                {importLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing Import...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    <span>{importResult ? 'Import More' : 'Start Import'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add / Edit Product Modal */}
       {isModalOpen && (

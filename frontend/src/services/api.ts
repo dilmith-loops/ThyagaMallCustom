@@ -376,6 +376,78 @@ export const api = {
     });
   },
 
+  async exportAdminProductsCsv(token: string, params: {
+    category_id?: number;
+    merchant_id?: number;
+    search?: string;
+  } = {}): Promise<Blob> {
+    const query = new URLSearchParams();
+    if (params.category_id) query.append('category_id', params.category_id.toString());
+    if (params.merchant_id) query.append('merchant_id', params.merchant_id.toString());
+    if (params.search) query.append('search', params.search);
+    const qs = query.toString();
+
+    const res = await fetch(`${API_BASE}/admin/products/export${qs ? `?${qs}` : ''}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      throw new Error(`Export failed with status ${res.status}`);
+    }
+    return res.blob();
+  },
+
+  async getAdminProductsSampleTemplate(): Promise<Blob> {
+    const res = await fetch(`${API_BASE}/admin/products/template`);
+    if (!res.ok) {
+      throw new Error(`Template download failed with status ${res.status}`);
+    }
+    return res.blob();
+  },
+
+  async importAdminProducts(token: string, file: File, updateExisting: boolean = false): Promise<{
+    success: boolean;
+    message: string;
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors?: string[];
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('update_existing', updateExisting ? '1' : '0');
+
+    const res = await fetch(`${API_BASE}/admin/products/import`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+      body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok || json.success === false) {
+      throw new Error(json.message || 'Product import failed');
+    }
+    return json;
+  },
+
+  async importAdminProductsJson(token: string, products: any[], updateExisting: boolean = false): Promise<{
+    success: boolean;
+    message: string;
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors?: string[];
+  }> {
+    return fetcher('/admin/products/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ products, update_existing: updateExisting }),
+    });
+  },
+
   // Merchant Management Methods
   async getAdminMerchants(token: string, params: {
     page?: number;
