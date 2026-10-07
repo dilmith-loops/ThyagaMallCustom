@@ -20,10 +20,12 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
+import { useFlashSale } from '@/context/FlashSaleContext';
 
 export default function AccountPage() {
   const router = useRouter();
   const { user, token, isAuthenticated, isLoading, logout, refreshProfile } = useAuth();
+  const { isActive: hasFlashDeals } = useFlashSale();
 
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -188,13 +190,23 @@ export default function AccountPage() {
             <p className="text-xs text-gray-600 leading-relaxed mb-4">
               Enjoy free islandwide delivery on orders over Rs. 2,999 and exclusive redeemable vouchers across all catalog categories.
             </p>
-            <Link
-              href="/flash-deals"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#a7144c] hover:underline"
-            >
-              <span>Explore Flash Deals</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+            {hasFlashDeals ? (
+              <Link
+                href="/flash-deals"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#a7144c] hover:underline"
+              >
+                <span>Explore Flash Deals</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            ) : (
+              <Link
+                href="/shop?sort=popular"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#36135d] hover:underline"
+              >
+                <span>Explore Top Deals</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
           </div>
         </div>
 

@@ -321,8 +321,30 @@ export default function AdminFlashSalesPage() {
         </div>
       )}
 
+      {/* Paused Campaign Alert */}
+      {activeSale && !activeSale.is_active && (
+        <div className="p-4 bg-gray-50 border border-gray-200 text-gray-800 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Power className="w-5 h-5 text-gray-500 shrink-0" />
+            <div>
+              <span className="font-bold text-gray-900">Campaign is PAUSED (Turned Off)</span>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Flash sale sections on the home page, navbar badges, and promotional deals are completely hidden from all shoppers across the entire site.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleToggleActive}
+            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl cursor-pointer transition shrink-0 flex items-center gap-1.5 shadow-xs"
+          >
+            <Power className="w-3.5 h-3.5" />
+            <span>Turn On (Publish)</span>
+          </button>
+        </div>
+      )}
+
       {/* Expired Campaign Warning Alert */}
-      {isExpired && (
+      {activeSale?.is_active && isExpired && (
         <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />

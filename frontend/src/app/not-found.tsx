@@ -71,7 +71,7 @@ export default function NotFound() {
             { label: 'Fashion & Apparel', href: '/shop?category=fashion' },
             { label: 'Beauty & Personal Care', href: '/shop?category=beauty' },
             { label: 'Food & Groceries', href: '/shop?category=food' },
-            { label: 'Flash Deals', href: '/flash-deals' },
+            { label: 'Trending Deals', href: '/shop?sort=popular' },
           ].map((cat) => (
             <Link
               key={cat.label}

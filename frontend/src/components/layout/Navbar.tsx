@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { Menu, ChevronDown, ChevronRight } from 'lucide-react';
 import { api } from '@/services/api';
 import { Category } from '@/types';
+import { useFlashSale } from '@/context/FlashSaleContext';
 
 export default function Navbar() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMegaOpen, setIsMegaOpen] = useState(false);
+  const { isActive } = useFlashSale();
 
   useEffect(() => {
     api.getCategories().then((res) => {
@@ -60,9 +62,11 @@ export default function Navbar() {
             <Link href="/" className="text-[#36135d] font-bold hover:text-[#e11d48] transition">
               Home
             </Link>
-            <Link href="/flash-deals" className="hover:text-[#e11d48] transition">
-              Today&apos;s Deals
-            </Link>
+            {isActive && (
+              <Link href="/flash-deals" className="hover:text-[#e11d48] transition font-bold text-[#e11d48]">
+                Today&apos;s Deals
+              </Link>
+            )}
             <Link href="/shop?sort=newest" className="hover:text-[#e11d48] transition">
               New Arrivals
             </Link>
@@ -88,16 +92,18 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Nav CTA */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/flash-deals"
-            className="flex items-center gap-1.5 text-xs font-black text-[#e11d48] hover:text-[#be123c] bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition"
-          >
-            <span className="animate-pulse">⚡</span>
-            <span>Flash Deals</span>
-          </Link>
-        </div>
+        {/* Right Nav CTA - Hidden when flash sales are inactive */}
+        {isActive && (
+          <div className="flex items-center gap-3">
+            <Link
+              href="/flash-deals"
+              className="flex items-center gap-1.5 text-xs font-black text-[#e11d48] hover:text-[#be123c] bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition"
+            >
+              <span className="animate-pulse">⚡</span>
+              <span>Flash Deals</span>
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );

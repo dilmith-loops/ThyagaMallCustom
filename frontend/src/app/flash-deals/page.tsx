@@ -3,44 +3,104 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Zap, Clock, Flame, ShoppingBag, ShieldCheck, Truck, ChevronRight, Loader2 } from 'lucide-react';
-import { api } from '@/services/api';
-import { FlashSale } from '@/types';
+import {
+  Zap,
+  ZapOff,
+  Clock,
+  Flame,
+  ShoppingBag,
+  ShieldCheck,
+  Truck,
+  ChevronRight,
+  Loader2,
+  ArrowRight,
+} from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useFlashSale } from '@/context/FlashSaleContext';
 
 export default function FlashDealsPage() {
   const { addToCart } = useCart();
-  const [flashSale, setFlashSale] = useState<FlashSale | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 42, seconds: 15 });
+  const { flashSale, isActive, isLoading } = useFlashSale();
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
 
   useEffect(() => {
-    api.getActiveFlashSale().then((res) => {
-      if (res.success && res.data) {
-        setFlashSale(res.data);
+    if (!flashSale?.end_time) return;
+
+    const calculateTime = () => {
+      const diff = new Date(flashSale.end_time).getTime() - Date.now();
+      if (diff <= 0) {
+        return { hours: 0, minutes: 0, seconds: 0 };
       }
-    }).finally(() => setIsLoading(false));
-  }, []);
+      return {
+        hours: Math.floor(diff / (1000 * 60 * 60)),
+        minutes: Math.floor((diff / 1000 / 60) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      };
+    };
 
-  useEffect(() => {
-    if (!flashSale || !flashSale.end_time) return;
-
+    setTimeLeft(calculateTime());
     const timer = setInterval(() => {
-      const diff = +new Date(flashSale.end_time) - +new Date();
-      if (diff > 0) {
-        setTimeLeft({
-          hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((diff / 1000 / 60) % 60),
-          seconds: Math.floor((diff / 1000) % 60),
-        });
-      }
+      setTimeLeft(calculateTime());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [flashSale]);
+  }, [flashSale?.end_time]);
 
   const formatDigit = (num: number) => num.toString().padStart(2, '0');
 
+  if (isLoading) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-gray-400">
+        <Loader2 className="w-8 h-8 animate-spin text-[#dc2626] mb-2" />
+        <span className="text-xs font-semibold">Checking active flash sale promotions...</span>
+      </div>
+    );
+  }
+
+  // If flash sale is inactive, turned off in admin, or has no items:
+  if (!isActive || !flashSale || !flashSale.items || flashSale.items.length === 0) {
+    return (
+      <div className="space-y-6">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <Link href="/" className="hover:text-[#36135d]">Home</Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="font-semibold text-gray-800">Flash Deals</span>
+        </div>
+
+        {/* Inactive State Banner / Card */}
+        <div className="bg-white rounded-2xl border border-gray-200/90 p-8 sm:p-14 text-center shadow-xs max-w-2xl mx-auto my-8">
+          <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-200/80 flex items-center justify-center mx-auto mb-5 text-gray-400">
+            <ZapOff className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-2 font-poppins">
+            No Active Flash Sale Right Now
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mb-6 leading-relaxed">
+            Our limited-time flash deals are currently paused or being prepared. You can explore our full store catalog with thousands of genuine products and everyday low prices.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/shop"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#36135d] hover:bg-[#280c48] text-white px-6 py-2.5 rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Browse Store Catalog</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/"
+              className="w-full sm:w-auto inline-flex items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-xl text-xs font-bold transition"
+            >
+              <span>Back to Home</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Active Flash Sale View
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
@@ -59,30 +119,32 @@ export default function FlashDealsPage() {
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black mb-2 tracking-tight">
-            ⚡ Mega Flash Sale Arena
+            {flashSale.title || '⚡ Mega Flash Sale Arena'}
           </h1>
           <p className="text-xs sm:text-sm text-red-100 leading-relaxed mb-6">
             Exclusive price drops on authentic Sri Lankan groceries, high-end electronics, home cookware, and beauty essentials. Limited stock available!
           </p>
 
           {/* Large Countdown Clock */}
-          <div className="inline-flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10">
-            <Clock className="w-5 h-5 text-amber-300 animate-spin-slow" />
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-300">Deals Expire In:</span>
-            <div className="flex items-center gap-1.5">
-              <span className="bg-white text-[#dc2626] font-black text-base px-2 py-1 rounded-md">
-                {formatDigit(timeLeft.hours)}
-              </span>
-              <span className="font-bold text-white">:</span>
-              <span className="bg-white text-[#dc2626] font-black text-base px-2 py-1 rounded-md">
-                {formatDigit(timeLeft.minutes)}
-              </span>
-              <span className="font-bold text-white">:</span>
-              <span className="bg-white text-[#dc2626] font-black text-base px-2 py-1 rounded-md">
-                {formatDigit(timeLeft.seconds)}
-              </span>
+          {timeLeft && (
+            <div className="inline-flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10">
+              <Clock className="w-5 h-5 text-amber-300 animate-spin-slow" />
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-300">Deals Expire In:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="bg-white text-[#dc2626] font-black text-base px-2 py-1 rounded-md">
+                  {formatDigit(timeLeft.hours)}
+                </span>
+                <span className="font-bold text-white">:</span>
+                <span className="bg-white text-[#dc2626] font-black text-base px-2 py-1 rounded-md">
+                  {formatDigit(timeLeft.minutes)}
+                </span>
+                <span className="font-bold text-white">:</span>
+                <span className="bg-white text-[#dc2626] font-black text-base px-2 py-1 rounded-md">
+                  {formatDigit(timeLeft.seconds)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Decorative Icons in Background */}
@@ -110,109 +172,98 @@ export default function FlashDealsPage() {
       </div>
 
       {/* Flash Deals Catalog */}
-      {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center text-gray-400">
-          <Loader2 className="w-8 h-8 animate-spin text-[#dc2626] mb-2" />
-          <span className="text-xs font-semibold">Loading current flash sale deals...</span>
-        </div>
-      ) : !flashSale || flashSale.items.length === 0 ? (
-        <div className="bg-white rounded-xl p-16 text-center border border-gray-200">
-          <h3 className="text-base font-bold text-gray-800 mb-1">No Active Flash Sale Right Now</h3>
-          <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
-            Stay tuned! Our next flash sale event is being prepared. Check back soon for massive discounts.
-          </p>
-          <Link
-            href="/shop"
-            className="bg-[#36135d] text-white px-5 py-2.5 rounded-lg text-xs font-bold transition"
-          >
-            Browse Regular Store Catalog
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {flashSale.items.map((item) => {
-            const product = item.product;
-            if (!product) return null;
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {flashSale.items.map((item) => {
+          const product = item.product;
+          if (!product) return null;
 
-            const flashPrice = Number(item.flash_price);
-            const regularPrice = Number(product.regular_price);
-            const discountPercent = item.discount_percentage || Math.round(((regularPrice - flashPrice) / regularPrice) * 100);
-            const percentSold = item.percentage_sold || 60;
+          const flashPrice = Number(item.flash_price);
+          const regularPrice = Number(product.regular_price || flashPrice);
+          const discountPercent =
+            item.discount_percentage ||
+            (regularPrice > flashPrice
+              ? Math.round(((regularPrice - flashPrice) / regularPrice) * 100)
+              : 0);
+          const soldCount = item.quantity_sold ?? Math.floor(((item.percentage_sold ?? 60) * (item.quantity_limit ?? 50)) / 100);
+          const limitCount = item.quantity_limit && item.quantity_limit > 0 ? item.quantity_limit : (soldCount + 20);
+          const percentSold = item.percentage_sold ?? Math.min(100, Math.round((soldCount / limitCount) * 100));
 
-            return (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl border border-red-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-red-400 transition-all duration-300 flex flex-col justify-between group"
-              >
-                <Link href={`/product/${product.slug}`} className="flex flex-col flex-1">
-                  <div className="relative w-full aspect-square bg-[#fffbfa] overflow-hidden">
-                    <Image
-                      src={product.primary_image || 'https://placehold.co/400x400/fff/dc2626?text=Flash+Deal'}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                      className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-                    />
+          return (
+            <div
+              key={item.id}
+              className="bg-white rounded-xl border border-red-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-red-400 transition-all duration-300 flex flex-col justify-between group"
+            >
+              <Link href={`/product/${product.slug}`} className="flex flex-col flex-1">
+                <div className="relative w-full aspect-square bg-[#fffbfa] overflow-hidden">
+                  <Image
+                    src={product.primary_image || (product.images && product.images[0]?.image_url) || 'https://placehold.co/400x400/fff/dc2626?text=Flash+Deal'}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                    className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {discountPercent > 0 && (
                     <div className="absolute top-2.5 left-2.5 bg-[#dc2626] text-white font-black text-xs px-2 py-0.5 rounded shadow-xs flex items-center gap-1 animate-pulse">
                       <Flame className="w-3.5 h-3.5 fill-current" />
                       <span>-{discountPercent}%</span>
                     </div>
+                  )}
+                </div>
+
+                <div className="p-3.5 flex flex-col flex-1 justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 block mb-1">
+                      {product.category?.name || 'Flash Deal'}
+                    </span>
+                    <h3 className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#36135d] transition mb-2">
+                      {product.name}
+                    </h3>
                   </div>
 
-                  <div className="p-3.5 flex flex-col flex-1 justify-between">
-                    <div>
-                      {product.category && (
-                        <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider block mb-1">
-                          {product.category.name}
+                  <div>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-base font-black text-[#dc2626]">
+                        Rs. {flashPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      {regularPrice > flashPrice && (
+                        <span className="text-xs text-gray-400 line-through">
+                          Rs. {regularPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       )}
-                      <h3 className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#dc2626] transition mb-2">
-                        {product.name}
-                      </h3>
-
-                      <div className="mb-2">
-                        <div className="text-base font-black text-[#dc2626]">
-                          Rs. {flashPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </div>
-                        <div className="text-xs text-gray-400 line-through">
-                          Rs. {regularPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </div>
-                      </div>
                     </div>
 
-                    {/* Stock Claim Progress */}
-                    <div>
-                      <div className="flex items-center justify-between text-[10px] font-bold mb-1">
-                        <span className="text-gray-500">{item.quantity_sold} Sold</span>
-                        <span className="text-red-600">{item.stock_remaining || 4} Left In Stock</span>
+                    {/* Stock Progress Bar */}
+                    <div className="space-y-1 mb-3">
+                      <div className="flex justify-between text-[10px] font-bold text-gray-500">
+                        <span>{soldCount} Sold</span>
+                        <span>{percentSold}% Claimed</span>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                         <div
-                          className="bg-linear-to-r from-amber-500 to-red-600 h-2 rounded-full transition-all duration-500"
+                          className="bg-linear-to-r from-orange-500 to-red-600 h-2 rounded-full"
                           style={{ width: `${percentSold}%` }}
                         />
                       </div>
                     </div>
                   </div>
-                </Link>
-
-                <div className="p-3.5 pt-0">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      addToCart(product, 1, flashPrice);
-                    }}
-                    className="w-full bg-[#dc2626] hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                  >
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>Claim This Deal</span>
-                  </button>
                 </div>
+              </Link>
+
+              {/* Add to Cart Button */}
+              <div className="p-3.5 pt-0">
+                <button
+                  type="button"
+                  onClick={() => addToCart(product, 1, flashPrice)}
+                  className="w-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold text-xs py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Claim Deal</span>
+                </button>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

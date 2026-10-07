@@ -5,8 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Phone, Mail, ShieldCheck, Lock } from 'lucide-react';
 import { getAssetUrl } from '@/utils/assets';
+import { useFlashSale } from '@/context/FlashSaleContext';
 
 export default function Footer() {
+  const { isActive } = useFlashSale();
   return (
     <footer className="hidden md:block bg-[#150d22] text-gray-300 mt-12 border-t-2 border-[#36135d]">
       {/* Main 5-Column Grid */}
@@ -62,9 +64,15 @@ export default function Footer() {
             <li>
               <Link href="/shop?sort=popular" className="hover:text-white transition">Trending Products</Link>
             </li>
-            <li>
-              <Link href="/flash-deals" className="hover:text-white transition">Today&apos;s Deals</Link>
-            </li>
+            {isActive ? (
+              <li>
+                <Link href="/flash-deals" className="hover:text-white transition">Today&apos;s Deals</Link>
+              </li>
+            ) : (
+              <li>
+                <Link href="/shop?sort=popular" className="hover:text-white transition">Popular Offers</Link>
+              </li>
+            )}
             <li>
               <Link href="/shop?sort=newest" className="hover:text-white transition">New Arrivals</Link>
             </li>

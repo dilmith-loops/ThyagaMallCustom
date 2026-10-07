@@ -22,8 +22,12 @@ class FlashSaleController extends Controller
             ->first();
 
         if (!$flashSale) {
-            // Check for nearest upcoming or latest
+            // Check for active campaign if schedule isn't strictly bounded by minutes
             $flashSale = FlashSale::where('is_active', true)
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('end_time')
+                      ->orWhere('end_time', '>=', $now);
+                })
                 ->with(['items' => function ($q) {
                     $q->with(['product' => function ($pq) {
                         $pq->with('images', 'category');

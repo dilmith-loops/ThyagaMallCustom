@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Zap, ArrowRight, Heart, ShoppingBag } from 'lucide-react';
@@ -11,92 +11,63 @@ interface FlashSaleSectionProps {
   flashSale?: FlashSale | null;
 }
 
-// Exact 6 Flash Deal items from the reference design
-const FLASH_DEAL_ITEMS = [
-  {
-    id: 101,
-    name: 'Samsung Galaxy A15 128GB – Blue',
-    slug: 'samsung-galaxy-a15',
-    discount: 30,
-    price: 49990,
-    regularPrice: 71990,
-    sold: 120,
-    total: 180,
-    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 102,
-    name: 'Philips Air Fryer 4.1L',
-    slug: 'philips-air-fryer-4l',
-    discount: 45,
-    price: 27990,
-    regularPrice: 50990,
-    sold: 86,
-    total: 120,
-    image: 'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 103,
-    name: 'JBL Wave Beam True Wireless',
-    slug: 'jbl-wave-beam-wireless',
-    discount: 38,
-    price: 16990,
-    regularPrice: 27500,
-    sold: 64,
-    total: 100,
-    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 104,
-    name: 'Haylou Smart Watch 2 Pro',
-    slug: 'haylou-smart-watch-2-pro',
-    discount: 52,
-    price: 9990,
-    regularPrice: 20990,
-    sold: 91,
-    total: 150,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 105,
-    name: 'Travel Laptop Backpack (15.6")',
-    slug: 'travel-laptop-backpack',
-    discount: 40,
-    price: 5990,
-    regularPrice: 9990,
-    sold: 67,
-    total: 100,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 106,
-    name: 'Non-Stick Cookware Set 7pcs',
-    slug: 'non-stick-cookware-set-7pcs',
-    discount: 33,
-    price: 11900,
-    regularPrice: 17990,
-    sold: 52,
-    total: 80,
-    image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=400&q=80',
-  },
-];
-
 export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
   const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState('All Deals');
-  const [timeLeft, setTimeLeft] = useState({ hours: 3, minutes: 21, seconds: 45 });
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
+
+  // If flash sale is off, missing, or has no items, render absolutely nothing
+  const isInactive = !flashSale || !flashSale.is_active || !flashSale.items || flashSale.items.length === 0;
 
   useEffect(() => {
+    if (!flashSale?.end_time) return;
+
+    const calculateTime = () => {
+      const diff = new Date(flashSale.end_time).getTime() - Date.now();
+      if (diff <= 0) {
+        return { hours: 0, minutes: 0, seconds: 0 };
+      }
+      return {
+        hours: Math.floor(diff / (1000 * 60 * 60)),
+        minutes: Math.floor((diff / 1000 / 60) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      };
+    };
+
+    setTimeLeft(calculateTime());
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 3, minutes: 21, seconds: 45 };
-      });
+      setTimeLeft(calculateTime());
     }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [flashSale?.end_time]);
+
+  // Extract distinct categories from actual flash sale products
+  const categoryTabs = useMemo(() => {
+    if (!flashSale?.items) return ['All Deals'];
+    const names = flashSale.items
+      .map((item) => item.product?.category?.name)
+      .filter((name): name is string => Boolean(name));
+    return ['All Deals', ...Array.from(new Set(names))];
+  }, [flashSale?.items]);
+
+  // Filter items based on activeTab
+  const visibleItems = useMemo(() => {
+    if (!flashSale?.items) return [];
+    if (activeTab === 'All Deals') return flashSale.items.slice(0, 6);
+    const filtered = flashSale.items.filter(
+      (item) => item.product?.category?.name?.toLowerCase() === activeTab.toLowerCase()
+    );
+    return (filtered.length > 0 ? filtered : flashSale.items).slice(0, 6);
+  }, [flashSale?.items, activeTab]);
+
+  // Check expiration
+  const endTimestamp = flashSale?.end_time ? new Date(flashSale.end_time).getTime() : 0;
+  const isExpired = endTimestamp > 0 && Date.now() >= endTimestamp;
+
+  if (isInactive || isExpired) {
+    return null;
+  }
 
   const formatDigit = (num: number) => num.toString().padStart(2, '0');
 
@@ -114,39 +85,44 @@ export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
           </div>
 
           {/* Ends In Countdown Badges */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-            <span>Ends in</span>
-            <div className="flex items-center gap-1 font-bold">
-              <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded text-[11px] font-black">
-                {formatDigit(timeLeft.hours)}
-              </span>
-              <span className="text-[#dc2626] font-bold">:</span>
-              <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded text-[11px] font-black">
-                {formatDigit(timeLeft.minutes)}
-              </span>
-              <span className="text-[#dc2626] font-bold">:</span>
-              <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded text-[11px] font-black">
-                {formatDigit(timeLeft.seconds)}
-              </span>
+          {timeLeft && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+              <span>Ends in</span>
+              <div className="flex items-center gap-1 font-bold">
+                <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded text-[11px] font-black">
+                  {formatDigit(timeLeft.hours)}
+                </span>
+                <span className="text-[#dc2626] font-bold">:</span>
+                <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded text-[11px] font-black">
+                  {formatDigit(timeLeft.minutes)}
+                </span>
+                <span className="text-[#dc2626] font-bold">:</span>
+                <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded text-[11px] font-black">
+                  {formatDigit(timeLeft.seconds)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Category Filter Tabs */}
-          <div className="hidden sm:flex items-center gap-4 text-xs font-semibold text-gray-500 ml-2">
-            {['All Deals', 'Electronics', 'Home', 'Fashion', 'Beauty'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`transition cursor-pointer pb-0.5 ${
-                  activeTab === tab
-                    ? 'text-[#36135d] border-b-2 border-[#36135d] font-bold'
-                    : 'hover:text-gray-900'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          {categoryTabs.length > 1 && (
+            <div className="hidden sm:flex items-center gap-4 text-xs font-semibold text-gray-500 ml-2">
+              {categoryTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`transition cursor-pointer pb-0.5 ${
+                    activeTab === tab
+                      ? 'text-[#36135d] border-b-2 border-[#36135d] font-bold'
+                      : 'hover:text-gray-900'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* View All Link */}
@@ -161,8 +137,24 @@ export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
 
       {/* 6 Flash Deal Cards in a Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
-        {FLASH_DEAL_ITEMS.map((item) => {
-          const percentClaimed = Math.min(100, Math.round((item.sold / item.total) * 100));
+        {visibleItems.map((item) => {
+          const product = item.product;
+          if (!product) return null;
+
+          const flashPrice = Number(item.flash_price);
+          const regularPrice = Number(product.regular_price || flashPrice);
+          const discountPercent =
+            item.discount_percentage ||
+            (regularPrice > flashPrice
+              ? Math.round(((regularPrice - flashPrice) / regularPrice) * 100)
+              : 0);
+          const soldCount = item.quantity_sold ?? Math.floor(((item.percentage_sold ?? 60) * (item.quantity_limit ?? 50)) / 100);
+          const limitCount = item.quantity_limit && item.quantity_limit > 0 ? item.quantity_limit : (soldCount + 20);
+          const percentClaimed = item.percentage_sold ?? Math.min(100, Math.round((soldCount / limitCount) * 100));
+          const productImage =
+            product.primary_image ||
+            (product.images && product.images[0]?.image_url) ||
+            'https://placehold.co/400x400/fff/dc2626?text=Flash+Deal';
 
           return (
             <div
@@ -170,26 +162,31 @@ export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
               className="bg-white rounded-xl border border-gray-200/90 overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col justify-between group relative"
             >
               {/* Product Thumbnail */}
-              <Link href={`/product/${item.slug}`} className="block relative aspect-square bg-[#fbfbfe] overflow-hidden">
+              <Link href={`/product/${product.slug}`} className="block relative aspect-square bg-[#fbfbfe] overflow-hidden">
                 <Image
-                  src={item.image}
-                  alt={item.name}
+                  src={productImage}
+                  alt={product.name}
                   fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                   className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                 />
 
                 {/* Red Discount Tag */}
-                <div className="absolute top-2 left-2 bg-[#dc2626] text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-2xs">
-                  -{item.discount}%
-                </div>
+                {discountPercent > 0 && (
+                  <div className="absolute top-2 left-2 bg-[#dc2626] text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-2xs">
+                    -{discountPercent}%
+                  </div>
+                )}
 
                 {/* Wishlist Heart */}
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                   }}
                   className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 shadow-2xs flex items-center justify-center text-gray-400 hover:text-red-500 cursor-pointer"
+                  aria-label="Save to Wishlist"
                 >
                   <Heart className="w-3.5 h-3.5" />
                 </button>
@@ -198,26 +195,28 @@ export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
               {/* Product Info */}
               <div className="p-3 flex flex-col flex-1 justify-between">
                 <div>
-                  <Link href={`/product/${item.slug}`}>
+                  <Link href={`/product/${product.slug}`}>
                     <h3 className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#36135d] transition mb-1.5 h-8">
-                      {item.name}
+                      {product.name}
                     </h3>
                   </Link>
 
                   <div className="mb-2">
                     <div className="text-sm font-black text-[#dc2626]">
-                      Rs. {item.price.toLocaleString()}
+                      Rs. {flashPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
-                    <div className="text-[10px] text-gray-400 line-through">
-                      Rs. {item.regularPrice.toLocaleString()}
-                    </div>
+                    {regularPrice > flashPrice && (
+                      <div className="text-[10px] text-gray-400 line-through">
+                        Rs. {regularPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Stock Progress Bar */}
                 <div className="space-y-1 mb-2.5">
                   <div className="text-[10px] font-bold text-gray-500">
-                    {item.sold} sold
+                    {soldCount} sold
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                     <div
@@ -229,22 +228,8 @@ export default function FlashSaleSection({ flashSale }: FlashSaleSectionProps) {
 
                 {/* Solid Purple Add to Cart Button */}
                 <button
-                  onClick={() => {
-                    addToCart(
-                      {
-                        id: item.id,
-                        name: item.name,
-                        slug: item.slug,
-                        regular_price: item.regularPrice,
-                        sale_price: item.price,
-                        stock_quantity: 50,
-                        primary_image: item.image,
-                        is_active: true,
-                      } as any,
-                      1,
-                      item.price
-                    );
-                  }}
+                  type="button"
+                  onClick={() => addToCart(product, 1, flashPrice)}
                   className="w-full bg-[#6d28d9] hover:bg-[#5b21b6] text-white py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />

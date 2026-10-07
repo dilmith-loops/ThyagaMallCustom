@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { api } from '@/services/api';
-import { Category, FlashSale } from '@/types';
+import { Category } from '@/types';
+import { useFlashSale } from '@/context/FlashSaleContext';
 import HeroBanner from '@/components/home/HeroBanner';
 import QuickCategoryIcons from '@/components/home/QuickCategoryIcons';
 import FlashSaleSection from '@/components/home/FlashSaleSection';
@@ -16,21 +17,14 @@ import NewsletterBar from '@/components/home/NewsletterBar';
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [flashSale, setFlashSale] = useState<FlashSale | null>(null);
+  const { flashSale, isActive } = useFlashSale();
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [catRes, flashRes] = await Promise.allSettled([
-          api.getCategories(),
-          api.getActiveFlashSale(),
-        ]);
-
-        if (catRes.status === 'fulfilled' && catRes.value.success) {
-          setCategories(catRes.value.data);
-        }
-        if (flashRes.status === 'fulfilled' && flashRes.value.success) {
-          setFlashSale(flashRes.value.data);
+        const catRes = await api.getCategories();
+        if (catRes.success) {
+          setCategories(catRes.data);
         }
       } catch {
         // Handled gracefully with fallback mock data
@@ -48,8 +42,8 @@ export default function HomePage() {
       {/* 2. 12 Quick Category Circular Badges */}
       <QuickCategoryIcons />
 
-      {/* 3. ⚡ Flash Deals Section with Real-Time Countdown & Sold Bars */}
-      <FlashSaleSection flashSale={flashSale} />
+      {/* 3. ⚡ Flash Deals Section with Real-Time Countdown & Sold Bars (Strictly hidden when turned off in Admin) */}
+      {isActive && flashSale && <FlashSaleSection flashSale={flashSale} />}
 
       {/* 4. Trending Right Now 🔥 Product Carousel/Grid */}
       <TrendingSection />
