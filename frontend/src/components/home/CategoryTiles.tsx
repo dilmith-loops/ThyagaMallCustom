@@ -11,7 +11,7 @@ const CATEGORIES = [
     subtitle: 'Latest Gadgets',
     slug: 'electronics',
     bg: 'bg-[#e0f2fe]',
-    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80',
   },
   {
     title: 'Home & Kitchen',
@@ -77,7 +77,7 @@ export default function CategoryTiles() {
           <Link
             key={cat.title}
             href={`/shop?category=${cat.slug}`}
-            className={`${cat.bg} rounded-2xl p-3.5 flex flex-col justify-between h-44 relative overflow-hidden group hover:shadow-md transition-all duration-300`}
+            className={`${cat.bg} rounded-2xl p-3.5 flex flex-col justify-between h-44 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 border border-black/5`}
           >
             {/* Text details */}
             <div className="relative z-10">
@@ -89,19 +89,19 @@ export default function CategoryTiles() {
               </p>
             </div>
 
-            {/* Product Image preview */}
-            <div className="absolute -bottom-1 -right-1 w-24 h-24 sm:w-28 sm:h-28">
+            {/* Product Image preview (Framed rounded squircle with white border and soft shadow) */}
+            <div className="absolute bottom-2.5 right-2.5 w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white group-hover:scale-105 group-hover:-rotate-1 transition-all duration-300">
               <Image
                 src={cat.image}
                 alt={cat.title}
                 fill
-                className="object-contain group-hover:scale-105 transition-transform duration-300"
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
               />
             </div>
 
             {/* Circular white action arrow */}
-            <div className="w-6 h-6 rounded-full bg-white shadow-2xs flex items-center justify-center text-gray-700 group-hover:bg-[#36135d] group-hover:text-white transition-colors relative z-10">
-              <ArrowRight className="w-3 h-3" />
+            <div className="w-7 h-7 rounded-full bg-white shadow-2xs flex items-center justify-center text-gray-700 group-hover:bg-[#36135d] group-hover:text-white group-hover:translate-x-0.5 transition-all relative z-10 border border-white/80">
+              <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </Link>
         ))}
