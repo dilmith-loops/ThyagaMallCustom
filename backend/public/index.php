@@ -17,6 +17,14 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 // Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
 
+// Polyfill for PHP < 8.4 for Symfony HttpFoundation Request::createFromGlobals
+if (!function_exists('request_parse_body')) {
+    function request_parse_body(): array
+    {
+        return [$_POST ?? [], $_FILES ?? []];
+    }
+}
+
 // Clean any stale bootstrap cache files on host
 foreach (glob(__DIR__.'/../bootstrap/cache/*.php') as $cacheFile) {
     if (basename($cacheFile) !== '.gitignore') {

@@ -169,8 +169,8 @@ export default function AdminFlashSalesPage() {
       setFeedback(`Flash Sale is now ${!activeSale.is_active ? 'ACTIVE' : 'INACTIVE'}`);
       fetchFlashSales();
       setTimeout(() => setFeedback(null), 3000);
-    } catch {
-      alert('Failed to update campaign state');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to update campaign state');
     }
   };
 

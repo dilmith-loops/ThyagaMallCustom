@@ -299,9 +299,14 @@ class Request
             return self::createRequestFromFactory($_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER);
         }
 
-        try {
-            [$post, $files] = request_parse_body();
-        } catch (\RequestParseBodyException) {
+        if (\function_exists('request_parse_body')) {
+            try {
+                [$post, $files] = request_parse_body();
+            } catch (\RequestParseBodyException) {
+                $post = $_POST;
+                $files = $_FILES;
+            }
+        } else {
             $post = $_POST;
             $files = $_FILES;
         }

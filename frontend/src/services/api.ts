@@ -570,8 +570,11 @@ export const api = {
     data: FlashSale;
   }> {
     return fetcher(`/admin/flash-sales/${id}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-HTTP-Method-Override': 'PUT',
+      },
       body: JSON.stringify(data),
     });
   },
@@ -590,8 +593,11 @@ export const api = {
 
   async removeAdminFlashSaleItem(token: string, flashSaleId: number, itemId: number): Promise<{ success: boolean; message: string }> {
     return fetcher(`/admin/flash-sales/${flashSaleId}/items/${itemId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-HTTP-Method-Override': 'DELETE',
+      },
     });
   },
 

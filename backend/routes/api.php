@@ -127,9 +127,9 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     // Flash Sales Management
     Route::get('/flash-sales', [AdminFlashSaleController::class, 'index']);
     Route::post('/flash-sales', [AdminFlashSaleController::class, 'store']);
-    Route::put('/flash-sales/{id}', [AdminFlashSaleController::class, 'update']);
+    Route::match(['put', 'post'], '/flash-sales/{id}', [AdminFlashSaleController::class, 'update']);
     Route::post('/flash-sales/{id}/items', [AdminFlashSaleController::class, 'addItem']);
-    Route::delete('/flash-sales/{id}/items/{itemId}', [AdminFlashSaleController::class, 'removeItem']);
+    Route::match(['delete', 'post'], '/flash-sales/{id}/items/{itemId}', [AdminFlashSaleController::class, 'removeItem']);
 
     // Orders Management
     Route::get('/orders', [AdminOrderController::class, 'index']);
