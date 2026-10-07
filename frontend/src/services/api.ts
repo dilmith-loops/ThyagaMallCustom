@@ -10,6 +10,8 @@ import {
   ActivityLogItem,
   CustomerAuthUser,
   CustomerAuthResponse,
+  ThyagaVoucherDetails,
+  ThyagaRedemption,
 } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -168,6 +170,50 @@ export const api = {
     });
   },
 
+  // Thyāga (GYF) Gift Voucher API
+  async getThyagaVoucherDetails(code: string): Promise<{
+    success: boolean;
+    data?: ThyagaVoucherDetails;
+    message: string;
+    error_code?: string;
+  }> {
+    return fetcher(`/vouchers/thyaga/details/${encodeURIComponent(code)}`);
+  },
+
+  async initiateThyagaRedemption(voucherId: string, amount: number): Promise<{
+    success: boolean;
+    data?: { redemptionId: string; status: string };
+    message: string;
+    error_code?: string;
+  }> {
+    return fetcher('/vouchers/thyaga/initiate', {
+      method: 'POST',
+      body: JSON.stringify({ voucher_id: voucherId, amount }),
+    });
+  },
+
+  async verifyThyagaOtp(redemptionId: string, amount: number, otp: string): Promise<{
+    success: boolean;
+    data?: { redemptionId: string; status: string; amount: number };
+    message: string;
+    error_code?: string;
+  }> {
+    return fetcher('/vouchers/thyaga/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ redemption_id: redemptionId, amount, otp }),
+    });
+  },
+
+  async cancelThyagaRedemption(redemptionId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return fetcher('/vouchers/thyaga/cancel', {
+      method: 'POST',
+      body: JSON.stringify({ redemption_id: redemptionId }),
+    });
+  },
+
   // Newsletter
   async subscribeNewsletter(email: string, source: string = 'home_banner'): Promise<{
     success: boolean;
@@ -191,6 +237,9 @@ export const api = {
     shipping_postal_code?: string;
     items: { product_id: number; quantity: number }[];
     voucher_code?: string;
+    voucher_redemption_id?: string;
+    voucher_owner_name?: string;
+    voucher_amount?: number;
     payment_method: string;
     notes?: string;
   }): Promise<{

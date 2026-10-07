@@ -81,6 +81,14 @@ class WebxpayController extends Controller
                 'notes' => trim(($order->notes ? $order->notes . "\n" : '') . "[WebXpay Transaction ID: {$result['transaction_id']}]"),
             ]);
 
+            // Finalize / burn held Thyāga voucher if applied
+            if (!empty($order->voucher_redemption_id)) {
+                $voucherService = app(\App\Services\ThyagaVoucherService::class);
+                if ($voucherService->isConfigured()) {
+                    $voucherService->completeRedemption($order->voucher_redemption_id, $order->order_number);
+                }
+            }
+
             $successUrl = $this->webxpayService->getFrontendRedirectUrl($order->order_number, true);
             return redirect()->away($successUrl);
         }

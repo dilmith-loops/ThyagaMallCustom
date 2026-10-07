@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\Payment\WebxpayController;
+use App\Http\Controllers\Api\ThyagaVoucherController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +72,15 @@ Route::prefix('products')->group(function () {
 Route::get('/flash-sale/active', [FlashSaleController::class, 'active']);
 
 Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
+
+// Thyāga Gift Voucher Endpoints
+Route::prefix('vouchers/thyaga')->group(function () {
+    Route::get('/health', [ThyagaVoucherController::class, 'health']);
+    Route::get('/details/{code}', [ThyagaVoucherController::class, 'details']);
+    Route::post('/initiate', [ThyagaVoucherController::class, 'initiate']);
+    Route::post('/verify-otp', [ThyagaVoucherController::class, 'verifyOtp']);
+    Route::post('/cancel', [ThyagaVoucherController::class, 'cancel']);
+});
 
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 

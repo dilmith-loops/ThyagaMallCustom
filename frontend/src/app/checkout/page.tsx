@@ -8,7 +8,25 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { getAssetUrl } from '@/utils/assets';
-import { ShieldCheck, Truck, CreditCard, Ticket, CheckCircle2, ChevronRight, Lock, Loader2, User, AlertCircle } from 'lucide-react';
+import {
+  ShieldCheck,
+  Truck,
+  CreditCard,
+  Ticket,
+  CheckCircle2,
+  ChevronRight,
+  Lock,
+  Loader2,
+  User,
+  AlertCircle,
+  Smartphone,
+  KeyRound,
+  RefreshCw,
+  X,
+  Sparkles,
+  Check,
+} from 'lucide-react';
+import { ThyagaVoucherDetails, ThyagaRedemption } from '@/types';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -17,7 +35,6 @@ export default function CheckoutPage() {
     items,
     subtotal,
     shippingFee,
-    total,
     appliedVoucher,
     voucherDiscount,
     applyVoucherCode,
@@ -47,11 +64,45 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  // Thyāga Voucher Redemption Flow State
   const [voucherCodeInput, setVoucherCodeInput] = useState('');
   const [voucherMessage, setVoucherMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const [thyagaDetails, setThyagaDetails] = useState<ThyagaVoucherDetails | null>(null);
+  const [thyagaRedemption, setThyagaRedemption] = useState<ThyagaRedemption | null>(null);
+  const [voucherStep, setVoucherStep] = useState<'idle' | 'details' | 'otp' | 'applied'>('idle');
+  const [redeemAmountInput, setRedeemAmountInput] = useState<number | string>('');
+  const [otpValue, setOtpValue] = useState<string>('');
+  const [isVoucherBusy, setIsVoucherBusy] = useState<boolean>(false);
+  const [voucherError, setVoucherError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // OTP resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
+  // Calculated effective discount and order total
+  const effectiveDiscount = thyagaRedemption
+    ? thyagaRedemption.amount
+    : (appliedVoucher ? voucherDiscount : 0);
+
+  const effectiveTotal = Math.max(0, (subtotal - effectiveDiscount) + shippingFee);
+
+  // Auto-switch payment method if voucher covers 100% of order
+  useEffect(() => {
+    if (effectiveTotal === 0 && (thyagaRedemption || appliedVoucher)) {
+      setFormData((prev) => ({ ...prev, payment_method: 'voucher' }));
+    } else if (formData.payment_method === 'voucher' && effectiveTotal > 0) {
+      setFormData((prev) => ({ ...prev, payment_method: 'cod' }));
+    }
+  }, [effectiveTotal, thyagaRedemption, appliedVoucher]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -80,16 +131,159 @@ export default function CheckoutPage() {
     );
   }
 
-  const handleVoucherApply = async (e: React.FormEvent) => {
+  // 1. Check voucher code via Thyāga API (with fallback to store promos)
+  const handleCheckVoucher = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!voucherCodeInput.trim()) return;
-    const res = await applyVoucherCode(voucherCodeInput.trim());
-    if (res.success) {
-      setVoucherMessage({ text: res.message, isError: false });
-      setVoucherCodeInput('');
-    } else {
-      setVoucherMessage({ text: res.message, isError: true });
+    const code = voucherCodeInput.trim().toUpperCase();
+    if (!code) return;
+
+    setIsVoucherBusy(true);
+    setVoucherError(null);
+    setVoucherMessage(null);
+
+    try {
+      const res = await api.getThyagaVoucherDetails(code);
+      if (res.success && res.data) {
+        setThyagaDetails(res.data);
+        const maxRedeemable = Math.min(res.data.amount, subtotal + shippingFee);
+        setRedeemAmountInput(maxRedeemable);
+        setVoucherStep('details');
+      } else {
+        // Fallback to store promotion voucher if available
+        const fallbackRes = await applyVoucherCode(code);
+        if (fallbackRes.success) {
+          setVoucherMessage({ text: fallbackRes.message, isError: false });
+          setVoucherCodeInput('');
+        } else {
+          setVoucherError(res.message || 'Thyāga voucher not found or invalid.');
+        }
+      }
+    } catch (err: unknown) {
+      try {
+        const fallbackRes = await applyVoucherCode(code);
+        if (fallbackRes.success) {
+          setVoucherMessage({ text: fallbackRes.message, isError: false });
+          setVoucherCodeInput('');
+          return;
+        }
+      } catch {}
+      const msg = err instanceof Error ? err.message : 'Could not verify voucher. Please check your code.';
+      setVoucherError(msg);
+    } finally {
+      setIsVoucherBusy(false);
     }
+  };
+
+  // 2. Initiate redemption and trigger SMS OTP
+  const handleInitiateRedemption = async () => {
+    if (!thyagaDetails) return;
+    const amountNum = Number(redeemAmountInput);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setVoucherError('Please enter a valid redemption amount greater than 0.');
+      return;
+    }
+
+    const maxRedeemable = Math.min(thyagaDetails.amount, subtotal + shippingFee);
+    if (amountNum > maxRedeemable) {
+      setVoucherError(`Amount cannot exceed Rs. ${maxRedeemable.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+      return;
+    }
+
+    setIsVoucherBusy(true);
+    setVoucherError(null);
+
+    try {
+      const res = await api.initiateThyagaRedemption(thyagaDetails.id, amountNum);
+      if (res.success && res.data) {
+        setThyagaRedemption({
+          redemptionId: res.data.redemptionId,
+          voucherId: thyagaDetails.id,
+          voucherCode: thyagaDetails.code,
+          amount: amountNum,
+          ownerName: thyagaDetails.ownerName,
+          maskedPhone: thyagaDetails.maskedPhone,
+        });
+        setVoucherStep('otp');
+        setResendCooldown(30);
+      } else {
+        setVoucherError(res.message || 'Failed to send SMS OTP.');
+      }
+    } catch (err: unknown) {
+      setVoucherError(err instanceof Error ? err.message : 'Failed to trigger verification SMS.');
+    } finally {
+      setIsVoucherBusy(false);
+    }
+  };
+
+  // 3. Verify OTP and put funds on hold
+  const handleVerifyOtp = async () => {
+    if (!thyagaRedemption || !otpValue.trim()) {
+      setVoucherError('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    setIsVoucherBusy(true);
+    setVoucherError(null);
+
+    try {
+      const res = await api.verifyThyagaOtp(
+        thyagaRedemption.redemptionId,
+        thyagaRedemption.amount,
+        otpValue.trim()
+      );
+      if (res.success && res.data) {
+        setVoucherStep('applied');
+        setVoucherMessage({
+          text: `Thyāga Voucher applied! Saved Rs. ${thyagaRedemption.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+          isError: false,
+        });
+      } else {
+        setVoucherError(res.message || 'Invalid OTP entered. Please try again.');
+      }
+    } catch (err: unknown) {
+      setVoucherError(err instanceof Error ? err.message : 'Failed to verify OTP code.');
+    } finally {
+      setIsVoucherBusy(false);
+    }
+  };
+
+  // 4. Resend OTP
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0 || !thyagaDetails || !thyagaRedemption) return;
+    setIsVoucherBusy(true);
+    setVoucherError(null);
+
+    try {
+      const res = await api.initiateThyagaRedemption(thyagaDetails.id, thyagaRedemption.amount);
+      if (res.success && res.data) {
+        setThyagaRedemption((prev) => prev ? { ...prev, redemptionId: res.data!.redemptionId } : null);
+        setResendCooldown(30);
+      } else {
+        setVoucherError(res.message || 'Could not resend SMS OTP.');
+      }
+    } catch (err: unknown) {
+      setVoucherError(err instanceof Error ? err.message : 'Failed to resend OTP.');
+    } finally {
+      setIsVoucherBusy(false);
+    }
+  };
+
+  // 5. Cancel / Release Voucher
+  const handleCancelThyagaVoucher = async () => {
+    if (thyagaRedemption?.redemptionId) {
+      try {
+        await api.cancelThyagaRedemption(thyagaRedemption.redemptionId);
+      } catch (e) {
+        console.error('Failed to cancel redemption hold on Thyāga:', e);
+      }
+    }
+    setThyagaRedemption(null);
+    setThyagaDetails(null);
+    setVoucherStep('idle');
+    setOtpValue('');
+    setVoucherError(null);
+    setVoucherCodeInput('');
+    setVoucherMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,8 +304,11 @@ export default function CheckoutPage() {
           product_id: item.product.id,
           quantity: item.quantity,
         })),
-        voucher_code: appliedVoucher ? appliedVoucher.code : undefined,
-        payment_method: formData.payment_method,
+        voucher_code: thyagaRedemption ? thyagaRedemption.voucherCode : (appliedVoucher ? appliedVoucher.code : undefined),
+        voucher_redemption_id: thyagaRedemption?.redemptionId || undefined,
+        voucher_owner_name: thyagaRedemption?.ownerName || undefined,
+        voucher_amount: thyagaRedemption ? thyagaRedemption.amount : (appliedVoucher ? appliedVoucher.discount : undefined),
+        payment_method: effectiveTotal === 0 ? 'voucher' : formData.payment_method,
         notes: formData.notes || undefined,
       };
 
@@ -306,88 +503,91 @@ export default function CheckoutPage() {
             </div>
 
             <div className="space-y-3">
-              {/* Option 1: Cash on Delivery */}
-              <label
-                className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition cursor-pointer ${
-                  formData.payment_method === 'cod' ? 'border-[#36135d] bg-purple-50/50' : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment_method"
-                  value="cod"
-                  checked={formData.payment_method === 'cod'}
-                  onChange={() => setFormData({ ...formData, payment_method: 'cod' })}
-                  className="mt-0.5 text-[#36135d] focus:ring-[#36135d]"
-                />
-                <div>
-                  <div className="text-xs font-bold text-gray-900">Cash on Delivery (COD)</div>
-                  <p className="text-[11px] text-gray-500">Pay cash upon safe delivery to your doorstep.</p>
+              {/* If voucher fully covers the total */}
+              {effectiveTotal === 0 && (thyagaRedemption || appliedVoucher) ? (
+                <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/70 space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>Order 100% Covered by Thyāga Gift Voucher</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 leading-relaxed">
+                    Your redeemed voucher balance completely covers the subtotal and delivery. No credit card or cash payment is required!
+                  </p>
                 </div>
-              </label>
-
-              {/* Option 2: Card Payment (WebXpay) */}
-              <label
-                className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition cursor-pointer ${
-                  formData.payment_method === 'card' ? 'border-[#36135d] bg-purple-50/50' : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment_method"
-                  value="card"
-                  checked={formData.payment_method === 'card'}
-                  onChange={() => setFormData({ ...formData, payment_method: 'card' })}
-                  className="mt-0.5 text-[#36135d] focus:ring-[#36135d]"
-                />
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-1.5">
-                    <span className="text-xs font-bold text-gray-900">
-                      Credit / Debit Card (WebXpay Gateway)
-                    </span>
-                    <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200/60">
-                      <img src={getAssetUrl('/payments/visa.svg')} alt="Visa" className="h-3 object-contain" />
-                      <img src={getAssetUrl('/payments/mastercard.svg')} alt="Mastercard" className="h-3 object-contain" />
-                      <img src={getAssetUrl('/payments/amex.svg')} alt="AMEX" className="h-3 object-contain" />
-                      <img src={getAssetUrl('/payments/genie.svg')} alt="Genie" className="h-3 object-contain" />
+              ) : (
+                <>
+                  {/* Option 1: Cash on Delivery */}
+                  <label
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition cursor-pointer ${
+                      formData.payment_method === 'cod' ? 'border-[#36135d] bg-purple-50/50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="cod"
+                      checked={formData.payment_method === 'cod'}
+                      onChange={() => setFormData({ ...formData, payment_method: 'cod' })}
+                      className="mt-0.5 text-[#36135d] focus:ring-[#36135d]"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-900">Cash on Delivery (COD)</span>
+                        {effectiveDiscount > 0 && (
+                          <span className="text-[11px] font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded">
+                            Pay Rs. {effectiveTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Pay remaining cash upon safe delivery to your doorstep.</p>
                     </div>
-                  </div>
-                  <p className="text-[11px] text-gray-500 mt-0.5">
-                    Secure online transaction via official WebXpay gateway. Supports Visa, Mastercard, AMEX & mobile wallets.
-                  </p>
-                </div>
-              </label>
+                  </label>
 
-              {/* Option 3: Thyaga Gift Voucher */}
-              <label
-                className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition cursor-pointer ${
-                  formData.payment_method === 'voucher' ? 'border-[#36135d] bg-purple-50/50' : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment_method"
-                  value="voucher"
-                  checked={formData.payment_method === 'voucher'}
-                  onChange={() => setFormData({ ...formData, payment_method: 'voucher' })}
-                  className="mt-0.5 text-[#36135d] focus:ring-[#36135d]"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-900">Thyaga Gift Voucher Only</span>
-                    <Ticket className="w-4 h-4 text-[#a7144c]" />
-                  </div>
-                  <p className="text-[11px] text-gray-500">
-                    Use when your voucher fully covers the order amount.
-                  </p>
-                </div>
-              </label>
+                  {/* Option 2: Card Payment (WebXpay) */}
+                  <label
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition cursor-pointer ${
+                      formData.payment_method === 'card' ? 'border-[#36135d] bg-purple-50/50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="card"
+                      checked={formData.payment_method === 'card'}
+                      onChange={() => setFormData({ ...formData, payment_method: 'card' })}
+                      className="mt-0.5 text-[#36135d] focus:ring-[#36135d]"
+                    />
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
+                        <span className="text-xs font-bold text-gray-900">
+                          Credit / Debit Card (WebXpay Gateway)
+                        </span>
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200/60">
+                          <img src={getAssetUrl('/payments/visa.svg')} alt="Visa" className="h-3 object-contain" />
+                          <img src={getAssetUrl('/payments/mastercard.svg')} alt="Mastercard" className="h-3 object-contain" />
+                          <img src={getAssetUrl('/payments/amex.svg')} alt="AMEX" className="h-3 object-contain" />
+                          <img src={getAssetUrl('/payments/genie.svg')} alt="Genie" className="h-3 object-contain" />
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Secure online transaction via official WebXpay gateway.
+                        {effectiveDiscount > 0 && (
+                          <strong className="text-purple-900 font-semibold block mt-0.5">
+                            Charges only remaining balance: Rs. {effectiveTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </strong>
+                        )}
+                      </p>
+                    </div>
+                  </label>
+                </>
+              )}
             </div>
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
-              {error}
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -410,9 +610,11 @@ export default function CheckoutPage() {
               <>
                 <Lock className="w-4 h-4" />
                 <span>
-                  {formData.payment_method === 'card'
-                    ? `Proceed to WebXpay (Rs. ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })})`
-                    : `Place Order (Rs. ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })})`}
+                  {effectiveTotal === 0
+                    ? 'Place Order (Fully Paid by Voucher)'
+                    : formData.payment_method === 'card'
+                    ? `Proceed to WebXpay (Rs. ${effectiveTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`
+                    : `Place Order (Rs. ${effectiveTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`}
                 </span>
               </>
             )}
@@ -449,9 +651,52 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            {/* Voucher Redemption Form */}
-            <div className="pt-4 border-t border-gray-100 mb-4">
-              {appliedVoucher ? (
+            {/* Interactive Thyāga Gift Voucher Redemption Section */}
+            <div className="pt-4 border-t border-gray-100 mb-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                  <Ticket className="w-4 h-4 text-[#a7144c]" />
+                  <span>Thyāga Gift Voucher</span>
+                </span>
+                <span className="text-[10px] bg-purple-100 text-[#36135d] font-bold px-2 py-0.5 rounded-full uppercase">
+                  Official GYF
+                </span>
+              </div>
+
+              {/* Step: Already Applied */}
+              {voucherStep === 'applied' && thyagaRedemption ? (
+                <div className="p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300 rounded-xl space-y-2 shadow-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-4 h-4 stroke-[3]" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                          <span>Thyāga Voucher Applied</span>
+                          <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded">
+                            {thyagaRedemption.voucherCode}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-emerald-800">
+                          Owner: <strong>{thyagaRedemption.ownerName}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCancelThyagaVoucher}
+                      className="text-[11px] text-red-600 font-bold hover:underline shrink-0"
+                    >
+                      Release
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-200/60 font-semibold text-emerald-900">
+                    <span>Deducted from Total:</span>
+                    <span>- Rs. {thyagaRedemption.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              ) : appliedVoucher ? (
                 <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs">
                   <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -465,30 +710,180 @@ export default function CheckoutPage() {
                     Remove
                   </button>
                 </div>
+              ) : voucherStep === 'details' && thyagaDetails ? (
+                /* Step 2: Voucher Details & Amount Selection */
+                <div className="p-3.5 bg-purple-50/70 border border-purple-200 rounded-xl space-y-3">
+                  <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
+                    <div>
+                      <div className="text-xs font-bold text-[#36135d]">{thyagaDetails.ownerName}</div>
+                      <div className="text-[11px] text-gray-500">
+                        Phone: <strong className="text-gray-700">{thyagaDetails.maskedPhone}</strong>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-gray-400 uppercase font-semibold">Voucher Balance</div>
+                      <div className="text-xs font-black text-emerald-700">
+                        Rs. {thyagaDetails.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Amount to Redeem (LKR):
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="number"
+                        min="1"
+                        max={Math.min(thyagaDetails.amount, subtotal + shippingFee)}
+                        value={redeemAmountInput}
+                        onChange={(e) => setRedeemAmountInput(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg font-bold text-gray-900 focus:outline-hidden focus:border-[#36135d]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setRedeemAmountInput(Math.min(thyagaDetails.amount, subtotal + shippingFee))}
+                        className="text-[10px] font-bold text-[#36135d] hover:underline whitespace-nowrap px-1"
+                      >
+                        Max (Rs. {Math.min(thyagaDetails.amount, subtotal + shippingFee).toLocaleString()})
+                      </button>
+                    </div>
+                  </div>
+
+                  {voucherError && (
+                    <p className="text-[11px] text-red-600 font-medium">{voucherError}</p>
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={isVoucherBusy}
+                      onClick={handleInitiateRedemption}
+                      className="flex-1 bg-[#36135d] hover:bg-[#a7144c] text-white py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isVoucherBusy ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Sending OTP...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Smartphone className="w-3.5 h-3.5" />
+                          <span>Send SMS OTP</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVoucherStep('idle');
+                        setThyagaDetails(null);
+                        setVoucherError(null);
+                      }}
+                      className="px-3 py-2 text-xs font-semibold text-gray-500 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : voucherStep === 'otp' && thyagaRedemption ? (
+                /* Step 3: SMS OTP Verification Form */
+                <div className="p-3.5 bg-amber-50/70 border border-amber-300 rounded-xl space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-950">
+                      <KeyRound className="w-4 h-4 text-amber-600" />
+                      <span>Enter 6-Digit SMS OTP</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 leading-tight">
+                      A verification SMS has been sent to <strong>{thyagaRedemption.maskedPhone}</strong> to confirm redeeming Rs. {thyagaRedemption.amount.toLocaleString()}.
+                    </p>
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      autoFocus
+                      placeholder="• • • • • •"
+                      value={otpValue}
+                      onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center tracking-[0.5em] font-mono text-lg font-bold py-2 bg-white border border-amber-300 rounded-lg text-gray-900 focus:outline-hidden focus:border-purple-600"
+                    />
+                  </div>
+
+                  {voucherError && (
+                    <p className="text-[11px] text-red-600 font-medium">{voucherError}</p>
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={isVoucherBusy || otpValue.length < 4}
+                      onClick={handleVerifyOtp}
+                      className="flex-1 bg-[#36135d] hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isVoucherBusy ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Verify & Deduct</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isVoucherBusy || resendCooldown > 0}
+                      onClick={handleResendOtp}
+                      className="px-2.5 py-2 text-[11px] font-semibold text-purple-900 hover:underline disabled:text-gray-400 whitespace-nowrap"
+                    >
+                      {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend OTP'}
+                    </button>
+                  </div>
+
+                  <div className="text-center pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setVoucherStep('details')}
+                      className="text-[11px] text-gray-500 hover:text-gray-800 underline"
+                    >
+                      Change Amount
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div className="space-y-1">
+                /* Step 1: Voucher Code Input Form */
+                <form onSubmit={handleCheckVoucher} className="space-y-1.5">
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Thyaga Voucher Code"
+                      placeholder="e.g. TYG82947192"
                       value={voucherCodeInput}
                       onChange={(e) => setVoucherCodeInput(e.target.value)}
-                      className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded-lg uppercase focus:outline-hidden focus:border-[#36135d]"
+                      className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded-lg uppercase font-semibold focus:outline-hidden focus:border-[#36135d]"
                     />
                     <button
-                      type="button"
-                      onClick={handleVoucherApply}
-                      className="bg-[#36135d] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition hover:bg-[#a7144c]"
+                      type="submit"
+                      disabled={isVoucherBusy || !voucherCodeInput.trim()}
+                      className="bg-[#36135d] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition hover:bg-[#a7144c] disabled:opacity-50 flex items-center gap-1 cursor-pointer"
                     >
-                      Apply
+                      {isVoucherBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      <span>Redeem</span>
                     </button>
                   </div>
+                  {voucherError && (
+                    <p className="text-[11px] font-medium text-red-600">{voucherError}</p>
+                  )}
                   {voucherMessage && (
                     <p className={`text-[11px] font-medium ${voucherMessage.isError ? 'text-red-600' : 'text-emerald-700'}`}>
                       {voucherMessage.text}
                     </p>
                   )}
-                </div>
+                </form>
               )}
             </div>
 
@@ -501,10 +896,10 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {voucherDiscount > 0 && (
+              {effectiveDiscount > 0 && (
                 <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Thyaga Voucher Discount</span>
-                  <span>- Rs. {voucherDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span>Thyāga Voucher Discount</span>
+                  <span>- Rs. {effectiveDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
 
@@ -522,7 +917,7 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-base font-black text-gray-900 pt-3 border-t border-gray-200">
                 <span>Total Amount</span>
                 <span className="text-[#36135d]">
-                  Rs. {total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  Rs. {effectiveTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

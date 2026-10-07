@@ -27,6 +27,9 @@ class OrderController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'voucher_code' => 'nullable|string',
+            'voucher_redemption_id' => 'nullable|string',
+            'voucher_owner_name' => 'nullable|string',
+            'voucher_amount' => 'nullable|numeric|min:0',
             'payment_method' => 'required|string|in:cod,card,webxpay,voucher,voucher_cod',
             'notes' => 'nullable|string',
         ]);
@@ -59,10 +62,26 @@ class OrderController extends Controller
             // Calculate shipping fee: FREE if order over Rs. 2,999
             $shippingFee = ($subtotal >= 2999) ? 0.00 : 350.00;
 
-            // Calculate voucher discount
+            // Calculate voucher discount (Thyāga API or local DB)
             $discount = 0.00;
             $voucherCode = null;
-            if (!empty($validated['voucher_code'])) {
+            $redemptionId = $validated['voucher_redemption_id'] ?? null;
+            $thyagaService = app(\App\Services\ThyagaVoucherService::class);
+
+            if ($redemptionId) {
+                // If Thyāga API is configured, validate the hold status is still OK
+                if ($thyagaService->isConfigured()) {
+                    $isHoldValid = $thyagaService->validateHoldStatus($redemptionId);
+                    if (!$isHoldValid) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'The Thyāga voucher hold has expired or is invalid. Please re-verify your voucher.',
+                        ], 422);
+                    }
+                }
+                $discount = min($subtotal + $shippingFee, (float) ($validated['voucher_amount'] ?? 0));
+                $voucherCode = $validated['voucher_code'] ?? 'THYAGA-VOUCHER';
+            } elseif (!empty($validated['voucher_code'])) {
                 $voucher = Voucher::where('code', strtoupper(trim($validated['voucher_code'])))->first();
                 if ($voucher && $voucher->isValidForAmount($subtotal)) {
                     $discount = $voucher->calculateDiscount($subtotal);
@@ -98,6 +117,8 @@ class OrderController extends Controller
                 'shipping_fee' => $shippingFee,
                 'total' => $total,
                 'voucher_code' => $voucherCode,
+                'voucher_redemption_id' => $redemptionId,
+                'voucher_owner_name' => $validated['voucher_owner_name'] ?? null,
                 'payment_method' => $validated['payment_method'],
                 'payment_status' => $paymentStatus,
                 'order_status' => 'pending',
@@ -107,6 +128,11 @@ class OrderController extends Controller
             foreach ($orderItemsData as $itemData) {
                 $itemData['order_id'] = $order->id;
                 OrderItem::create($itemData);
+            }
+
+            // If order has a held Thyāga redemption and no online gateway pending (COD or fully paid by voucher), complete it immediately
+            if ($redemptionId && !$isOnlinePayment && $thyagaService->isConfigured()) {
+                $thyagaService->completeRedemption($redemptionId, $order->order_number);
             }
 
             $responseData = [

@@ -109,6 +109,26 @@ export interface Voucher {
   is_active: boolean;
 }
 
+export interface ThyagaVoucherDetails {
+  id: string;
+  code: string;
+  ownerName: string;
+  ownerMobile: string;
+  maskedPhone: string;
+  amount: number;
+  expiryDate: string | null;
+  status: string;
+}
+
+export interface ThyagaRedemption {
+  redemptionId: string;
+  voucherId: string;
+  voucherCode: string;
+  amount: number;
+  ownerName: string;
+  maskedPhone?: string;
+}
+
 export interface OrderItem {
   id?: number;
   product_id: number;
@@ -133,6 +153,8 @@ export interface Order {
   shipping_fee: number | string;
   total: number | string;
   voucher_code?: string | null;
+  voucher_redemption_id?: string | null;
+  voucher_owner_name?: string | null;
   payment_method: string;
   payment_status: 'pending' | 'paid' | 'refunded';
   order_status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';

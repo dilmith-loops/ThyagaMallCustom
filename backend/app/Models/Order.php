@@ -25,6 +25,8 @@ class Order extends Model
         'shipping_fee',
         'total',
         'voucher_code',
+        'voucher_redemption_id',
+        'voucher_owner_name',
         'payment_method',
         'payment_status',
         'order_status',
