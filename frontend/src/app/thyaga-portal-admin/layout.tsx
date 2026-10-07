@@ -32,7 +32,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const isLoginPage = pathname === '/thyaga-portal-admin/login';
+  const isLoginPage = Boolean(
+    pathname?.includes('/login') ||
+    (typeof window !== 'undefined' && window.location.pathname.includes('/login'))
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem('thyaga_admin_sidebar_collapsed');
@@ -69,7 +72,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   if (isLoginPage) {
-    return <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center w-full">{children}</div>;
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center w-full p-4 sm:p-6">
+        {children}
+      </div>
+    );
   }
 
   const toggleSidebar = () => {

@@ -1,2 +1,2 @@
-:HL["/ThyagaMall/_next/static/chunks/0bkwm-5_e5rr0.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"ZcCfY5SnJh04s80rJZvKG"}
+:HL["/ThyagaMall/_next/static/chunks/27jyr6zzx3qw2.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"cC7khTM85dUcjnOHBl5Ia"}
