@@ -59,6 +59,7 @@ class ProductController extends Controller
                 $query->orderBy('rating_avg', 'desc');
                 break;
             case 'popular':
+            case 'best_selling':
                 $query->orderBy('reviews_count', 'desc');
                 break;
             case 'newest':
@@ -67,7 +68,7 @@ class ProductController extends Controller
                 break;
         }
 
-        $perPage = min(50, max(12, (int) $request->query('per_page', 24)));
+        $perPage = min(100, max(1, (int) $request->query('per_page', 24)));
         $products = $query->paginate($perPage);
 
         return response()->json([

@@ -43,8 +43,9 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
     toggleWishlist(product);
   };
 
-  const imageUrl = !imgError && product.primary_image
-    ? product.primary_image
+  const primaryImg = product.primary_image || product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url;
+  const imageUrl = !imgError && primaryImg
+    ? primaryImg
     : 'https://placehold.co/400x400/f3f4f6/36135d?text=Thyaga+Mall';
 
   return (

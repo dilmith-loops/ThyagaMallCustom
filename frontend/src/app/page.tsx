@@ -27,7 +27,7 @@ export default function HomePage() {
           setCategories(catRes.data);
         }
       } catch {
-        // Handled gracefully with fallback mock data
+        // Handled gracefully
       }
     }
 
