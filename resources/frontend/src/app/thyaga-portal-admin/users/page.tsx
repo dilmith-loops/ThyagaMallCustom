@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { CustomerUser } from '@/types';
+import PasswordInput from '@/components/common/PasswordInput';
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
@@ -524,10 +525,9 @@ export default function AdminCustomersPage() {
 
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Initial Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   required
-                  placeholder="Minimum 6 characters"
+                  placeholder="Minimum 8 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:border-[#36135d]"
@@ -635,8 +635,7 @@ export default function AdminCustomersPage() {
                 <label className="block font-bold text-gray-700 mb-1">
                   Reset Password (Leave blank to keep existing)
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   placeholder="New password (optional)"
                   value={editFormData.password}
                   onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}

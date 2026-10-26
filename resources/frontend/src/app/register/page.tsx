@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { getAssetUrl } from '@/utils/assets';
+import PasswordInput from '@/components/common/PasswordInput';
 
 function RegisterForm() {
   const router = useRouter();
@@ -216,11 +217,10 @@ function RegisterForm() {
                 Confirm Password <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 z-10">
                   <Lock className="w-4 h-4" />
                 </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
+                <PasswordInput
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   placeholder="Repeat your password"

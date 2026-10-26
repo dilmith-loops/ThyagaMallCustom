@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Lock, Mail, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '@/services/api';
 import { getAssetUrl } from '@/utils/assets';
+import PasswordInput from '@/components/common/PasswordInput';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -94,8 +95,7 @@ export default function AdminLoginPage() {
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

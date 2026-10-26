@@ -69,7 +69,7 @@ class AdminUserController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:30',
             'status' => 'required|in:active,suspended,inactive',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
         ]);
 
         $hashedPassword = Hash::make($validated['password']);
@@ -108,7 +108,7 @@ class AdminUserController extends Controller
             'email' => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:30',
             'status' => 'sometimes|required|in:active,suspended,inactive',
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:8',
         ]);
 
         $updateData = [
