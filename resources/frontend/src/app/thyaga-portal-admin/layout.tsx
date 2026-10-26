@@ -60,10 +60,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAuthenticated(false);
       setAdminUser(null);
       if (!isLoginPage) {
-        window.location.href = '/thyaga-portal-admin/login/';
+        router.replace('/thyaga-portal-admin/login/');
       }
     }
-  }, [pathname, isLoginPage]);
+  }, [pathname, isLoginPage, router]);
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('thyaga_admin_sidebar_collapsed') : null;
@@ -78,7 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsAuthenticated(false);
     setAdminUser(null);
     setShowLogoutModal(false);
-    window.location.href = '/thyaga-portal-admin/login/';
+    router.replace('/thyaga-portal-admin/login/');
   };
 
   // If on login page, show ONLY the login section (no sidebar, no header)

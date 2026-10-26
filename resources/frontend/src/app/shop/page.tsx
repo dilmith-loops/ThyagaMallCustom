@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/services/api';
@@ -99,7 +100,7 @@ function ShopContent() {
       <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div>
           <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
-            <a href="/" className="hover:text-[#36135d]">Home</a>
+            <Link href="/" className="hover:text-[#36135d]">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <span className="font-semibold text-gray-800">
               {currentCategory ? `Category: ${currentCategory}` : currentSearch ? `Search: "${currentSearch}"` : 'All Products'}
