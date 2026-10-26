@@ -242,12 +242,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <nav className="space-y-1 flex-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                // Pages are exported with trailing slashes, so compare without them
+                // and keep a section highlighted on its sub-pages too.
+                const currentPath = (pathname || '').replace(/\/+$/, '');
+                const isActive = currentPath === item.href || currentPath.startsWith(`${item.href}/`);
 
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
                     onClick={() => setIsMobileOpen(false)}
                     title={isCollapsed ? item.label : undefined}
                     className={`flex items-center rounded-xl text-xs font-semibold transition group relative ${
