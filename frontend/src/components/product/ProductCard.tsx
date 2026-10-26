@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingBag, Star, Heart, Check } from 'lucide-react';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import TiltCard from '@/components/motion/TiltCard';
 
 interface ProductCardProps {
   product: Product;
@@ -49,16 +51,19 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
     : 'https://placehold.co/400x400/f3f4f6/36135d?text=Thyaga+Mall';
 
   return (
-    <div className="group bg-white rounded-xl border border-gray-200/80 overflow-hidden hover:shadow-xl hover:border-purple-300 transition-all duration-300 flex flex-col justify-between relative">
+    <TiltCard className="h-full" max={7}>
+    <div className="group h-full bg-white rounded-xl border border-gray-200/80 overflow-hidden hover:shadow-[0_18px_40px_-12px_rgba(54,19,93,0.35)] hover:border-purple-300 transition-[box-shadow,border-color] duration-300 flex flex-col justify-between relative">
       <Link href={`/product/${product.slug}`} className="flex flex-col flex-1">
         {/* Thumbnail Container */}
         <div className="relative w-full aspect-square bg-[#fbfbfe] overflow-hidden">
+          {/* Soft brand glow that blooms behind the product on hover */}
+          <div aria-hidden className="absolute inset-6 rounded-full bg-radial from-purple-300/50 to-transparent blur-2xl opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 transition-all duration-500" />
           <Image
             src={imageUrl}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-            className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+            className="object-contain p-4 group-hover:scale-110 group-hover:-rotate-2 transition-transform duration-500 ease-out"
             onError={() => setImgError(true)}
           />
 
@@ -72,15 +77,24 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
           )}
 
           {/* Wishlist Button */}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.75 }}
             onClick={handleWishlist}
-            className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center transition cursor-pointer ${
+            className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center transition-colors cursor-pointer ${
               isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'
             }`}
             aria-label="Save to wishlist"
           >
-            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
-          </button>
+            <motion.span
+              key={isWishlisted ? 'on' : 'off'}
+              initial={{ scale: 0.4 }}
+              animate={{ scale: [0.4, 1.35, 1] }}
+              transition={{ duration: 0.45 }}
+              className="flex"
+            >
+              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+            </motion.span>
+          </motion.button>
         </div>
 
         {/* Content Details */}
@@ -122,9 +136,11 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
             </div>
 
             {/* Quick Add Button */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.12, rotate: -6 }}
+              whileTap={{ scale: 0.82 }}
               onClick={handleAddToCart}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer shadow-xs ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer shadow-xs ${
                 isAdded
                   ? 'bg-emerald-600 text-white'
                   : 'bg-purple-100 text-[#36135d] hover:bg-[#36135d] hover:text-white'
@@ -132,11 +148,23 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
               title="Add to cart"
               aria-label="Add to cart"
             >
-              {isAdded ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
-            </button>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isAdded ? 'added' : 'idle'}
+                  initial={{ y: 10, opacity: 0, rotate: -45 }}
+                  animate={{ y: 0, opacity: 1, rotate: 0 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  className="flex"
+                >
+                  {isAdded ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
           </div>
         </div>
       </Link>
     </div>
+    </TiltCard>
   );
 }

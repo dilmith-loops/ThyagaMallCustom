@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { ArrowRight, Award } from 'lucide-react';
 import { api } from '@/services/api';
 import { Product } from '@/types';
 import ProductCard from '@/components/product/ProductCard';
+import { Stagger, StaggerItem } from '@/components/motion/Reveal';
 
 const TABS = [
   { label: 'All', slug: '' },
@@ -76,13 +78,20 @@ export default function BestSellersSection() {
               <button
                 key={tab.label}
                 onClick={() => setActiveTab(tab.label)}
-                className={`px-3 py-1 rounded-full transition cursor-pointer text-xs ${
+                className={`relative px-3 py-1 rounded-full transition-colors cursor-pointer text-xs ${
                   activeTab === tab.label
-                    ? 'bg-[#6d28d9] text-white font-bold shadow-2xs'
+                    ? 'text-white font-bold'
                     : 'text-gray-500 hover:text-gray-900 bg-gray-100'
                 }`}
               >
-                {tab.label}
+                {activeTab === tab.label && (
+                  <motion.span
+                    layoutId="bestseller-pill"
+                    className="absolute inset-0 rounded-full bg-linear-to-r from-[#6d28d9] to-[#a7144c] shadow-md shadow-purple-500/30"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className="relative">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -125,7 +134,7 @@ export default function BestSellersSection() {
       </div>
 
       {/* Grid of 6 Best Sellers */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+      <div className={isLoading || products.length === 0 ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5" : ""}>
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
             <div
@@ -141,9 +150,13 @@ export default function BestSellersSection() {
             </div>
           ))
         ) : products.length > 0 ? (
-          products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))
+          <Stagger key={activeTab} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+            {products.map((product) => (
+              <StaggerItem key={product.id} className="h-full">
+                <ProductCard product={product} />
+              </StaggerItem>
+            ))}
+          </Stagger>
         ) : (
           <div className="col-span-full py-8 text-center text-gray-500 text-xs">
             No products found in this category.

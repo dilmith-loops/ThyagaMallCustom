@@ -38,19 +38,23 @@ export default function TopBrands() {
         </Link>
       </div>
 
-      {/* Brand Logos Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 sm:gap-3 items-center">
-        {BRANDS.map((b) => (
-          <Link
-            key={b.name}
-            href={`/shop?search=${encodeURIComponent(b.name.replace(' ', ''))}`}
-            className="h-14 rounded-xl border border-gray-100 hover:border-purple-200 bg-gray-50/50 hover:bg-white flex items-center justify-center p-2 text-center transition-all duration-200 hover:shadow-2xs group"
-          >
-            <span className={`${b.fontClass} group-hover:scale-105 transition-transform select-none`}>
-              {b.name}
-            </span>
-          </Link>
-        ))}
+      {/* Infinite brand marquee — pauses on hover */}
+      <div className="marquee-wrap relative overflow-hidden -mx-1 py-1 mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+        <div className="marquee-track flex w-max gap-3">
+          {[...BRANDS, ...BRANDS].map((b, i) => (
+            <Link
+              key={`${b.name}-${i}`}
+              href={`/shop?search=${encodeURIComponent(b.name.replace(' ', ''))}`}
+              aria-hidden={i >= BRANDS.length}
+              tabIndex={i >= BRANDS.length ? -1 : undefined}
+              className="h-14 w-32 sm:w-36 shrink-0 rounded-xl border border-gray-100 hover:border-purple-300 bg-gray-50/50 hover:bg-white flex items-center justify-center p-2 text-center transition-all duration-300 hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-1 group"
+            >
+              <span className={`${b.fontClass} group-hover:scale-110 transition-transform duration-300 select-none`}>
+                {b.name}
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

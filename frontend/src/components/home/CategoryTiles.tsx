@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Folder } from 'lucide-react';
+import TiltCard from '@/components/motion/TiltCard';
+import { Stagger, StaggerItem } from '@/components/motion/Reveal';
 
 const CATEGORIES = [
   {
@@ -72,15 +74,20 @@ export default function CategoryTiles() {
       </div>
 
       {/* 6 Category Tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+      <Stagger className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
         {CATEGORIES.map((cat) => (
+          <StaggerItem key={cat.title}>
+          <TiltCard max={12}>
           <Link
-            key={cat.title}
             href={`/shop?category=${cat.slug}`}
-            className={`${cat.bg} rounded-2xl p-3.5 flex flex-col justify-between h-44 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 border border-black/5`}
+            className={`${cat.bg} rounded-2xl p-3.5 flex flex-col justify-between h-44 relative group hover:shadow-[0_20px_40px_-14px_rgba(54,19,93,0.35)] transition-shadow duration-300 border border-black/5 [transform-style:preserve-3d]`}
           >
+            {/* Decorative ring that spins up on hover */}
+            <span aria-hidden className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+              <span className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full border-[6px] border-white/50 group-hover:scale-150 transition-transform duration-700" />
+            </span>
             {/* Text details */}
-            <div className="relative z-10">
+            <div className="relative z-10 [transform:translateZ(25px)]">
               <h3 className="text-xs font-extrabold text-gray-900 leading-tight">
                 {cat.title}
               </h3>
@@ -90,7 +97,7 @@ export default function CategoryTiles() {
             </div>
 
             {/* Product Image preview (Framed rounded squircle with white border and soft shadow) */}
-            <div className="absolute bottom-2.5 right-2.5 w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white group-hover:scale-105 group-hover:-rotate-1 transition-all duration-300">
+            <div className="absolute bottom-2.5 right-2.5 w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden shadow-md border-2 border-white bg-white [transform:translateZ(50px)] group-hover:[transform:translateZ(70px)_rotate(-4deg)_scale(1.06)] group-hover:shadow-2xl transition-all duration-500">
               <Image
                 src={cat.image}
                 alt={cat.title}
@@ -100,12 +107,14 @@ export default function CategoryTiles() {
             </div>
 
             {/* Circular white action arrow */}
-            <div className="w-7 h-7 rounded-full bg-white shadow-2xs flex items-center justify-center text-gray-700 group-hover:bg-[#36135d] group-hover:text-white group-hover:translate-x-0.5 transition-all relative z-10 border border-white/80">
+            <div className="w-7 h-7 rounded-full bg-white shadow-2xs flex items-center justify-center text-gray-700 group-hover:bg-[#36135d] group-hover:text-white transition-colors relative z-10 border border-white/80 [transform:translateZ(35px)]">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </Link>
+          </TiltCard>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </section>
   );
 }
