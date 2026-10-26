@@ -255,13 +255,13 @@ class ImportCsvProducts extends Command
         $this->info("⚡ Step 5: Setting up 24H Flash Deals campaign with imported catalog...");
         $this->setupFlashSale($createdProducts);
 
-        // 7. Update frontend/src/data/product-slugs.json
+        // 7. Update resources/frontend/src/data/product-slugs.json
         $this->info("📄 Step 6: Updating product-slugs.json for Next.js SSG...");
-        $slugsFile = base_path('../frontend/src/data/product-slugs.json');
+        $slugsFile = resource_path('frontend/src/data/product-slugs.json');
         if (file_exists($slugsFile) || is_dir(dirname($slugsFile))) {
             $finalSlugs = array_merge(['[slug]'], $allSlugs);
             file_put_contents($slugsFile, json_encode($finalSlugs, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-            $this->info("✅ Wrote " . count($finalSlugs) . " slugs to frontend/src/data/product-slugs.json");
+            $this->info("✅ Wrote " . count($finalSlugs) . " slugs to resources/frontend/src/data/product-slugs.json");
         }
 
         $this->info("==========================================================");

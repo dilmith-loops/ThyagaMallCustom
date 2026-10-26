@@ -78,9 +78,9 @@ Crafted with authentic Thyaga brand aesthetics (**Deep Royal Plum `#36135D`**, *
 ### Project Structure
 The repository root is a standard Laravel 12 application:
 ```text
-app/ bootstrap/ config/ database/ resources/ routes/ storage/ tests/ vendor/
-public/        # Laravel front controller (index.php) + compiled Next.js static export
-frontend/      # Next.js storefront & admin source (builds into frontend/out → public/)
+app/ bootstrap/ config/ database/ routes/ storage/ tests/ vendor/
+resources/frontend/  # Next.js storefront & admin source (builds into resources/frontend/out → public/)
+public/              # Laravel front controller (index.php) + compiled Next.js static export
 scripts/       # build & deployment helpers
 ```
 
@@ -98,7 +98,7 @@ php artisan thyaga:import-catalog
 
 ### 2. Frontend (Next.js)
 ```bash
-cd frontend
+cd resources/frontend
 npm run dev -- --port 3000
 ```
 Storefront available at: `http://localhost:3000`

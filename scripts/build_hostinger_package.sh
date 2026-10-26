@@ -30,7 +30,7 @@ php artisan view:clear || true
 echo "📋 Copying application files..."
 rsync -av --exclude='.git' \
           --exclude='node_modules' \
-          --exclude='frontend' \
+          --exclude='resources/frontend' \
           --exclude='tests' \
           --exclude='scripts' \
           --exclude='database_dump' \

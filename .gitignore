@@ -36,5 +36,5 @@ ThyagaMall_Hostinger_Deploy.zip
 node_modules/
 
 # Frontend Next.js build cache
-frontend/.next/
-frontend/out/
+resources/frontend/.next/
+resources/frontend/out/
