@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Flame } from 'lucide-react';
 import { api } from '@/services/api';
 import { Product } from '@/types';
 import ProductCard from '@/components/product/ProductCard';
@@ -44,10 +44,9 @@ export default function TrendingSection() {
       {/* Header */}
       <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <span className="text-lg float-y inline-block">💥</span>
-          <h2 className="text-base sm:text-lg font-black text-gray-900 tracking-tight font-poppins flex items-center gap-1.5">
-            <span className="text-gradient-anim">Trending Right Now</span>
-            <span className="inline-block animate-bounce">🔥</span>
+          <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+          <h2 className="text-base sm:text-lg font-black text-gray-900 tracking-tight font-poppins">
+            Trending Right Now
           </h2>
         </div>
 
