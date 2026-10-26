@@ -156,7 +156,43 @@ function StaticGift() {
   );
 }
 
-export default function HeroScene({ color, accent, paused = false }: HeroSceneProps) {
+// Probe once whether this browser can create a WebGL context at all.
+function supportsWebGL(): boolean {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl2') || canvas.getContext('webgl')));
+  } catch {
+    return false;
+  }
+}
+
+// If anything inside the 3D scene throws (driver bugs, lost context…), show the static gift instead
+// of letting the error take down the homepage.
+class SceneErrorBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    return this.state.failed ? <StaticGift /> : this.props.children;
+  }
+}
+
+export default function HeroScene(props: HeroSceneProps) {
+  const [webgl] = useState(supportsWebGL);
+
+  if (!webgl) return <StaticGift />;
+
+  return (
+    <SceneErrorBoundary>
+      <Scene3D {...props} />
+    </SceneErrorBoundary>
+  );
+}
+
+function Scene3D({ color, accent, paused = false }: HeroSceneProps) {
   // Adaptive quality: lower resolution when FPS drops, shed extras if it keeps struggling.
   const [dpr, setDpr] = useState(1.5);
   const [lite, setLite] = useState(false);

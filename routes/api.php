@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\AdminActivityLogController;
 use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminFlashSaleController;
+use App\Http\Controllers\Api\Admin\AdminHeroSlideController;
 use App\Http\Controllers\Api\Admin\AdminMerchantController;
 use App\Http\Controllers\Api\Admin\AdminNewsletterController;
 use App\Http\Controllers\Api\Admin\AdminOrderController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Api\Admin\AdminStaffController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\FlashSaleController;
+use App\Http\Controllers\Api\HeroSlideController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
@@ -72,6 +74,7 @@ Route::prefix('products')->group(function () {
 });
 
 Route::get('/flash-sale/active', [FlashSaleController::class, 'active']);
+Route::get('/hero-slides', [HeroSlideController::class, 'index']);
 
 Route::post('/vouchers/apply', [VoucherController::class, 'apply'])->middleware('throttle:20,1');
 
@@ -132,6 +135,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::match(['put', 'post'], '/flash-sales/{id}', [AdminFlashSaleController::class, 'update']);
     Route::post('/flash-sales/{id}/items', [AdminFlashSaleController::class, 'addItem']);
     Route::match(['delete', 'post'], '/flash-sales/{id}/items/{itemId}', [AdminFlashSaleController::class, 'removeItem']);
+
+    // Homepage Hero Slides
+    Route::get('/hero-slides', [AdminHeroSlideController::class, 'index']);
+    Route::post('/hero-slides', [AdminHeroSlideController::class, 'store']);
+    Route::put('/hero-slides/reorder', [AdminHeroSlideController::class, 'reorder']);
+    Route::put('/hero-slides/{id}', [AdminHeroSlideController::class, 'update']);
+    Route::delete('/hero-slides/{id}', [AdminHeroSlideController::class, 'destroy']);
 
     // Orders Management
     Route::get('/orders', [AdminOrderController::class, 'index']);

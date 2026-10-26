@@ -239,3 +239,27 @@ export interface NewsletterSubscriber {
   updated_at: string;
 }
 
+
+export interface HeroSlide {
+  id: number;
+  title_line1: string;
+  title_line2?: string | null;
+  subtext?: string | null;
+  show_badge: boolean;
+  badge_top?: string | null;
+  badge_value?: string | null;
+  badge_bottom?: string | null;
+  cta_text: string;
+  cta_link: string;
+  box_color: string;
+  accent_color: string;
+  gradient_from: string;
+  gradient_via: string;
+  gradient_to: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type HeroSlideInput = Omit<HeroSlide, 'id' | 'sort_order' | 'created_at' | 'updated_at'>;

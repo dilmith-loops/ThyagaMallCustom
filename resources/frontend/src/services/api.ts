@@ -12,6 +12,8 @@ import {
   CustomerAuthResponse,
   ThyagaVoucherDetails,
   ThyagaRedemption,
+  HeroSlide,
+  HeroSlideInput,
 } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -211,6 +213,48 @@ export const api = {
     return fetcher('/vouchers/thyaga/cancel', {
       method: 'POST',
       body: JSON.stringify({ redemption_id: redemptionId }),
+    });
+  },
+
+  // Homepage hero slides
+  async getHeroSlides(): Promise<{ success: boolean; data: HeroSlide[] }> {
+    return fetcher('/hero-slides');
+  },
+
+  async getAdminHeroSlides(token: string): Promise<{ success: boolean; data: HeroSlide[] }> {
+    return fetcher('/admin/hero-slides', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async createAdminHeroSlide(token: string, data: HeroSlideInput): Promise<{ success: boolean; message: string; data: HeroSlide }> {
+    return fetcher('/admin/hero-slides', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateAdminHeroSlide(token: string, id: number, data: Partial<HeroSlideInput>): Promise<{ success: boolean; message: string; data: HeroSlide }> {
+    return fetcher(`/admin/hero-slides/${id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAdminHeroSlide(token: string, id: number): Promise<{ success: boolean; message: string }> {
+    return fetcher(`/admin/hero-slides/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async reorderAdminHeroSlides(token: string, ids: number[]): Promise<{ success: boolean; message: string; data: HeroSlide[] }> {
+    return fetcher('/admin/hero-slides/reorder', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ids }),
     });
   },
 

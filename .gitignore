@@ -38,3 +38,6 @@ node_modules/
 # Frontend Next.js build cache
 resources/frontend/.next/
 resources/frontend/out/
+
+# Hand-written SQL for servers without SSH (keep in git)
+!database/sql/*.sql

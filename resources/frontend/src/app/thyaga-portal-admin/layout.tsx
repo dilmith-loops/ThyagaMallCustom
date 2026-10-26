@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   LayoutDashboard,
+  GalleryHorizontalEnd,
   Package,
   Zap,
   ShoppingBag,
@@ -119,6 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Products', href: '/thyaga-portal-admin/products', icon: Package },
     { label: 'Merchants', href: '/thyaga-portal-admin/merchants', icon: Store },
     { label: 'Flash Sales', href: '/thyaga-portal-admin/flash-sales', icon: Zap, badge: 'HOT' },
+    { label: 'Hero Slides', href: '/thyaga-portal-admin/hero-slides', icon: GalleryHorizontalEnd },
     { label: 'Orders', href: '/thyaga-portal-admin/orders', icon: ShoppingBag },
     { label: 'Customers', href: '/thyaga-portal-admin/users', icon: Users },
     { label: 'Subscribers', href: '/thyaga-portal-admin/subscribers', icon: Mail },
