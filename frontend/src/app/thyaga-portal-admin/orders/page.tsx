@@ -199,6 +199,31 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {/* Pagination Bar */}
+      {pagination.last_page > 1 && (
+        <div className="bg-white p-3 rounded-xl border border-gray-100 flex items-center justify-between text-xs text-gray-600">
+          <span>
+            Page {pagination.current_page} of {pagination.last_page} ({pagination.total} total orders)
+          </span>
+          <div className="flex gap-2">
+            <button
+              disabled={pagination.current_page <= 1}
+              onClick={() => fetchOrders(pagination.current_page - 1)}
+              className="px-3 py-1 rounded border border-gray-200 disabled:opacity-40 hover:bg-gray-50 cursor-pointer"
+            >
+              Previous
+            </button>
+            <button
+              disabled={pagination.current_page >= pagination.last_page}
+              onClick={() => fetchOrders(pagination.current_page + 1)}
+              className="px-3 py-1 rounded border border-gray-200 disabled:opacity-40 hover:bg-gray-50 cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Order Detail & Status Transition Modal */}
       {activeOrder && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">

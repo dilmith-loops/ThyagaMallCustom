@@ -76,9 +76,18 @@ Crafted with authentic Thyaga brand aesthetics (**Deep Royal Plum `#36135D`**, *
 
 ## 🛠️ How to Run Locally
 
+### Project Structure
+The repository root is a standard Laravel 12 application:
+```text
+app/ bootstrap/ config/ database/ resources/ routes/ storage/ tests/ vendor/
+public/        # Laravel front controller (index.php) + compiled Next.js static export
+frontend/      # Next.js storefront & admin source (builds into frontend/out → public/)
+scripts/       # build & deployment helpers
+```
+
 ### 1. Backend (Laravel API)
 ```bash
-cd backend
+# from the project root
 php artisan serve --port=8000
 ```
 API endpoints available at: `http://127.0.0.1:8000/api`

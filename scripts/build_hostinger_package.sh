@@ -15,42 +15,40 @@ echo "🧹 Cleaning previous build artifacts..."
 rm -rf "$DIST_DIR" "$ZIP_FILE"
 mkdir -p "$DIST_DIR"
 
-# 2. Build Frontend
+# 2. Build Frontend into public/
 echo "📦 Building Next.js Frontend with basePath /ThyagaMall..."
-cd "$WORKSPACE_DIR/frontend"
-npm run build
+"$WORKSPACE_DIR/scripts/sync_to_root.sh"
 
-echo "📋 Copying frontend static files to dist..."
-cp -R out/* "$DIST_DIR/"
-cp "$WORKSPACE_DIR/deployment/.htaccess" "$DIST_DIR/.htaccess"
-
-# 3. Prepare Backend
-echo "🐘 Preparing Laravel Backend..."
-cd "$WORKSPACE_DIR/backend"
+# 3. Prepare Laravel
+echo "🐘 Preparing Laravel application..."
+cd "$WORKSPACE_DIR"
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
-mkdir -p "$DIST_DIR/backend"
-# Copy necessary backend files (excluding git, tests, node_modules)
-echo "📋 Copying backend files..."
+# Copy the Laravel app (excluding git, frontend source, tests, local artifacts)
+echo "📋 Copying application files..."
 rsync -av --exclude='.git' \
           --exclude='node_modules' \
+          --exclude='frontend' \
           --exclude='tests' \
+          --exclude='scripts' \
+          --exclude='database_dump' \
+          --exclude='dist_thyagamall' \
+          --exclude='ThyagaMall_Hostinger_Deploy.zip' \
           --exclude='storage/logs/*.log' \
           --exclude='.env' \
-          "$WORKSPACE_DIR/backend/" "$DIST_DIR/backend/"
+          "$WORKSPACE_DIR/" "$DIST_DIR/"
 
 # Copy production .env template
-cp "$WORKSPACE_DIR/backend/.env.production.example" "$DIST_DIR/backend/.env"
-cp "$WORKSPACE_DIR/deployment/backend_htaccess" "$DIST_DIR/backend/.htaccess"
+cp "$WORKSPACE_DIR/.env.production.example" "$DIST_DIR/.env"
 
 # Ensure storage directories exist and are writable
-mkdir -p "$DIST_DIR/backend/storage/framework/cache/data"
-mkdir -p "$DIST_DIR/backend/storage/framework/sessions"
-mkdir -p "$DIST_DIR/backend/storage/framework/views"
-mkdir -p "$DIST_DIR/backend/storage/logs"
-mkdir -p "$DIST_DIR/backend/bootstrap/cache"
+mkdir -p "$DIST_DIR/storage/framework/cache/data"
+mkdir -p "$DIST_DIR/storage/framework/sessions"
+mkdir -p "$DIST_DIR/storage/framework/views"
+mkdir -p "$DIST_DIR/storage/logs"
+mkdir -p "$DIST_DIR/bootstrap/cache"
 
 # 4. Copy Database Dump
 echo "🗄️ Copying MySQL Database Dump..."

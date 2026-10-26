@@ -12,7 +12,7 @@ A ready-to-deploy, self-contained package has already been built and compiled:
 1. **Deployment Archive**: `ThyagaMall_Hostinger_Deploy.zip` (26 MB)
    - Contains all **437 static & dynamic Next.js storefront & admin pages** pre-rendered with `basePath: '/ThyagaMall'` and API pointing to `https://ai.loopsintegrated.co/ThyagaMall/api`.
    - Contains the complete **Laravel 12 REST API** with all Composer `vendor/` dependencies pre-installed (no SSH/Composer required on Hostinger).
-   - Contains custom **LiteSpeed / Apache `.htaccess`** rules to route API calls to Laravel and storefront routes to Next.js.
+   - Uses the standard **Laravel folder structure**: the static storefront lives in `public/` next to Laravel's `index.php`, and **LiteSpeed / Apache `.htaccess`** rules route API calls to Laravel and storefront routes to Next.js.
 2. **Database SQL Dump**: `database_dump/thyaga_mall_db.sql` (and inside `database_sql/thyaga_mall_db.sql`)
    - 406 real products, categories, vouchers, and admin credentials.
 
@@ -51,29 +51,32 @@ A ready-to-deploy, self-contained package has already been built and compiled:
 7. After extraction, you will see:
    ```text
    public_html/ThyagaMall/
-   ├── .htaccess
-   ├── index.html
-   ├── shop/
-   ├── product/
-   ├── thyaga-portal-admin/
-   ├── _next/
-   ├── backend/
-   │   ├── .env
-   │   ├── app/
-   │   ├── bootstrap/
-   │   ├── config/
-   │   ├── public/
-   │   ├── storage/
-   │   └── vendor/
-   └── ...
+   ├── .htaccess          # forwards every request into public/
+   ├── .env
+   ├── app/
+   ├── bootstrap/
+   ├── config/
+   ├── database/
+   ├── public/
+   │   ├── .htaccess      # API → index.php, storefront → static Next.js pages
+   │   ├── index.php
+   │   ├── index.html
+   │   ├── shop/
+   │   ├── product/
+   │   ├── thyaga-portal-admin/
+   │   └── _next/
+   ├── resources/
+   ├── routes/
+   ├── storage/
+   └── vendor/
    ```
 8. (Optional) You can delete `ThyagaMall_Hostinger_Deploy.zip` from the server to save disk space.
 
 ---
 
-### Step 3: Configure Database Credentials in `backend/.env`
+### Step 3: Configure Database Credentials in `.env`
 
-1. Inside File Manager, navigate to `public_html/ThyagaMall/backend/`.
+1. Inside File Manager, navigate to `public_html/ThyagaMall/`.
 2. Find the `.env` file (if hidden, toggle "Show Hidden Files" in File Manager settings gear icon).
 3. Right-click `.env` and click **Edit**.
 4. Update the DB credentials with the database you created in Step 1:
@@ -92,8 +95,8 @@ A ready-to-deploy, self-contained package has already been built and compiled:
 ### Step 4: Verify Folder Permissions
 
 In Hostinger File Manager:
-- Make sure `backend/storage` and all its subfolders are writable (`775` or `755`).
-- Make sure `backend/bootstrap/cache` is writable (`775` or `755`).
+- Make sure `storage` and all its subfolders are writable (`775` or `755`).
+- Make sure `bootstrap/cache` is writable (`775` or `755`).
 *(Hostinger defaults are usually 755 which work out of the box).*
 
 ---
@@ -132,4 +135,4 @@ Whenever you modify frontend or backend code locally, simply run:
 ```bash
 ./scripts/build_hostinger_package.sh
 ```
-This automatically compiles the frontend with the `/ThyagaMall` base path, packages the Laravel backend, and regenerates `ThyagaMall_Hostinger_Deploy.zip`.
+This automatically compiles the frontend with the `/ThyagaMall` base path, copies the export into `public/`, packages the Laravel app, and regenerates `ThyagaMall_Hostinger_Deploy.zip`.

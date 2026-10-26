@@ -14,16 +14,23 @@ function ShopContent() {
   const currentCategory = searchParams.get('category') || '';
   const currentSearch = searchParams.get('search') || '';
   const currentSort = searchParams.get('sort') || 'newest';
-  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const currentMinPrice = searchParams.get('min_price') || '';
+  const currentMaxPrice = searchParams.get('max_price') || '';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Filter state
-  const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '');
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '');
+  // Filter state for inputs
+  const [minPrice, setMinPrice] = useState(currentMinPrice);
+  const [maxPrice, setMaxPrice] = useState(currentMaxPrice);
+
+  useEffect(() => {
+    setMinPrice(currentMinPrice);
+    setMaxPrice(currentMaxPrice);
+  }, [currentMinPrice, currentMaxPrice]);
 
   useEffect(() => {
     api.getCategories().then((res) => {
@@ -40,8 +47,8 @@ function ShopContent() {
           search: currentSearch || undefined,
           sort: currentSort,
           page: currentPage,
-          min_price: minPrice ? parseFloat(minPrice) : undefined,
-          max_price: maxPrice ? parseFloat(maxPrice) : undefined,
+          min_price: currentMinPrice ? parseFloat(currentMinPrice) : undefined,
+          max_price: currentMaxPrice ? parseFloat(currentMaxPrice) : undefined,
           per_page: 24,
         });
 
@@ -57,16 +64,27 @@ function ShopContent() {
     }
 
     fetchCatalog();
-  }, [currentCategory, currentSearch, currentSort, currentPage, minPrice, maxPrice]);
+  }, [currentCategory, currentSearch, currentSort, currentPage, currentMinPrice, currentMaxPrice]);
 
   const updateFilters = (newParams: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
+    const isChangingPage = 'page' in newParams;
+
     Object.entries(newParams).forEach(([k, v]) => {
       if (v) params.set(k, v);
       else params.delete(k);
     });
-    params.set('page', '1'); // reset page on filter
+
+    // Reset to page 1 only when other filter criteria change (category, search, sort, price)
+    if (!isChangingPage) {
+      params.set('page', '1');
+    }
+
     router.push(`/shop?${params.toString()}`);
+
+    if (isChangingPage && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const clearAllFilters = () => {
