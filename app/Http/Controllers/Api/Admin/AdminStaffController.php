@@ -63,7 +63,7 @@ class AdminStaffController extends Controller
             'phone' => 'nullable|string|max:30',
             'role' => 'required|in:super_admin,manager,editor',
             'status' => 'nullable|in:active,suspended,inactive',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:10',
         ]);
 
         $hashedPassword = Hash::make($validated['password']);
@@ -104,8 +104,18 @@ class AdminStaffController extends Controller
             'phone' => 'nullable|string|max:30',
             'role' => 'sometimes|required|in:super_admin,manager,editor',
             'status' => 'sometimes|required|in:active,suspended,inactive',
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:10',
         ]);
+
+        // Prevent locking yourself out (or self-promotion) by editing your own role/status.
+        if ($admin->is($request->user())
+            && ((isset($validated['role']) && $validated['role'] !== $admin->role)
+                || (isset($validated['status']) && $validated['status'] !== $admin->status))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot change your own role or status.',
+            ], 422);
+        }
 
         $updateData = [
             'name' => $validated['name'] ?? $admin->name,
@@ -120,6 +130,11 @@ class AdminStaffController extends Controller
         }
 
         $admin->update($updateData);
+
+        // Sign out existing sessions when access is revoked or the password changes.
+        if ($admin->status !== 'active' || !empty($validated['password'])) {
+            $admin->tokens()->delete();
+        }
 
         ActivityLog::record(
             'UPDATE_ADMIN',
@@ -148,8 +163,16 @@ class AdminStaffController extends Controller
             ], 403);
         }
 
+        if ($admin->is($request->user())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot delete your own account.',
+            ], 403);
+        }
+
         $adminName = $admin->name;
         $adminEmail = $admin->email;
+        $admin->tokens()->delete();
         $admin->delete();
 
         ActivityLog::record(

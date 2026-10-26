@@ -42,6 +42,9 @@ rsync -av --exclude='.git' \
 
 # Copy production .env template
 cp "$WORKSPACE_DIR/.env.production.example" "$DIST_DIR/.env"
+# Give fresh installs their own APP_KEY (the template intentionally has none)
+NEW_KEY="$(php artisan key:generate --show)"
+sed -i.bak "s|^APP_KEY=.*|APP_KEY=${NEW_KEY}|" "$DIST_DIR/.env" && rm -f "$DIST_DIR/.env.bak"
 
 # Ensure storage directories exist and are writable
 mkdir -p "$DIST_DIR/storage/framework/cache/data"

@@ -53,12 +53,6 @@ function LoginForm() {
     }
   };
 
-  const handleQuickDemo = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('password123');
-    setError(null);
-  };
-
   return (
     <div className="min-h-[75vh] flex items-center justify-center py-8 px-4 sm:px-6">
       <div className="w-full max-w-md">
@@ -184,31 +178,6 @@ function LoginForm() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Accounts Pill Bar */}
-          <div className="mt-6 pt-5 border-t border-gray-100">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center mb-2.5">
-              Quick Demo Fill
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('nimal.perera@gmail.com')}
-                className="text-left px-2.5 py-1.5 bg-gray-50 hover:bg-purple-50 hover:border-purple-200 border border-gray-200/80 rounded-lg transition text-[11px] group cursor-pointer"
-              >
-                <div className="font-bold text-gray-700 group-hover:text-[#36135d] truncate">Nimal Perera</div>
-                <div className="text-[10px] text-gray-400 truncate">Customer Demo</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('sanduni.j@yahoo.com')}
-                className="text-left px-2.5 py-1.5 bg-gray-50 hover:bg-purple-50 hover:border-purple-200 border border-gray-200/80 rounded-lg transition text-[11px] group cursor-pointer"
-              >
-                <div className="font-bold text-gray-700 group-hover:text-[#36135d] truncate">Sanduni J.</div>
-                <div className="text-[10px] text-gray-400 truncate">Customer Demo</div>
-              </button>
-            </div>
-          </div>
 
           {/* Register Prompt */}
           <div className="mt-6 text-center text-xs text-gray-500">

@@ -140,91 +140,93 @@ class WebxpayService
     }
 
     /**
-     * Verify and parse incoming WebXpay callback response
+     * Verify and parse incoming WebXpay callback response.
+     *
+     * A payment is only reported as successful when the `payment` payload carries a
+     * valid RSA signature from WebXpay. Anything else (unsigned fields, a bad or
+     * missing signature, no public key configured) is treated as failed — the
+     * callback URL is public, so unsigned data can be forged by anyone.
      */
     public function verifyCallback(Request $request): array
     {
         Log::info('WebXpay Callback received', [
             'method' => $request->method(),
-            'all' => $request->all(),
+            'keys' => array_keys($request->all()),
             'ip' => $request->ip(),
         ]);
 
         $orderNumber = null;
         $status = 'failed';
         $transactionId = null;
-        $message = 'Payment processing failed';
+        $message = 'Payment could not be verified';
 
-        // Check 1: WebXpay Encrypted / Base64 'payment' response parameter
-        if ($request->has('payment')) {
-            $paymentEncoded = $request->input('payment');
-            $signatureEncoded = $request->input('signature');
-            $customFieldsEncoded = $request->input('custom_fields');
+        $paymentEncoded = (string) $request->input('payment', '');
+        $signatureEncoded = (string) $request->input('signature', '');
 
-            $paymentData = base64_decode($paymentEncoded);
-            $signature = $signatureEncoded ? base64_decode($signatureEncoded) : null;
+        if ($paymentEncoded !== '') {
+            $paymentData = (string) base64_decode($paymentEncoded, true);
+            $signature = $signatureEncoded !== '' ? base64_decode($signatureEncoded, true) : false;
+            $signatureValid = $signature !== false && $paymentData !== '' && $this->isValidSignature($paymentData, $signature);
 
-            // Attempt public key verification if public key is provided
-            $signatureValid = true;
-            if (!empty($this->publicKey) && $signature) {
-                try {
-                    $formattedKey = $this->formatPublicKey($this->publicKey);
-                    // WebXPay usually uses openssl_public_decrypt or openssl_verify
-                    $decryptedValue = '';
-                    $decryptSuccess = @openssl_public_decrypt($signature, $decryptedValue, $formattedKey);
-                    if ($decryptSuccess && $decryptedValue === $paymentData) {
-                        $signatureValid = true;
-                    } else {
-                        // Fallback check using openssl_verify
-                        $verifySuccess = @openssl_verify($paymentData, $signature, $formattedKey, OPENSSL_ALGO_SHA256);
-                        $signatureValid = ($verifySuccess === 1);
-                    }
-                } catch (\Throwable $e) {
-                    Log::warning('WebXpay signature verification exception: ' . $e->getMessage());
-                    // In sandbox/testing or malformed key, continue with parsed content check
-                }
-            }
-
-            // Extract variables from payment string (either pipe-separated or JSON)
             $parsed = $this->parsePaymentData($paymentData);
             $orderNumber = $parsed['order_number'] ?? null;
-            $status = ($signatureValid && ($parsed['status'] === 'success' || $parsed['status_code'] === '0' || $parsed['status_code'] === '00' || $parsed['status_code'] === 0)) ? 'success' : 'failed';
-            $transactionId = $parsed['transaction_id'] ?? $parsed['ref_id'] ?? null;
-            $message = $parsed['message'] ?? ($status === 'success' ? 'Payment approved' : 'Payment rejected or invalid');
+            $transactionId = $parsed['transaction_id'] ?? null;
 
-            // If order number not in payment data, try custom fields
-            if (!$orderNumber && $customFieldsEncoded) {
-                $customPlain = base64_decode($customFieldsEncoded);
-                $customParts = explode('|', $customPlain);
+            if (!$signatureValid) {
+                Log::warning('WebXpay callback rejected: invalid or missing signature', ['order_number' => $orderNumber]);
+            } elseif ($parsed['status'] === 'success' || in_array((string) $parsed['status_code'], ['0', '00'], true)) {
+                $status = 'success';
+                $message = $parsed['message'] ?: 'Payment approved';
+            } else {
+                $message = $parsed['message'] ?: 'Payment rejected';
+            }
+
+            if (!$orderNumber && ($customFieldsEncoded = $request->input('custom_fields'))) {
+                $customParts = explode('|', (string) base64_decode($customFieldsEncoded));
                 $orderNumber = $customParts[0] ?? null;
             }
         }
 
-        // Check 2: Direct POST fields (e.g. order_id, status, status_code, order_reference_number)
+        // Unsigned fields are only used to find the order for the "payment failed" redirect.
         if (!$orderNumber) {
             $orderNumber = $request->input('order_id')
                 ?: $request->input('order_reference_number')
                 ?: $request->input('merchant_ref');
-
-            $statusCode = $request->input('status_code') ?? $request->input('status');
-            if (in_array(strtolower((string) $statusCode), ['0', '00', 'success', 'approved', 'paid', '1'])) {
-                $status = 'success';
-                $message = 'Payment completed successfully';
-            } else {
-                $status = 'failed';
-                $message = $request->input('message') ?: 'Payment unsuccessful or cancelled';
-            }
-            $transactionId = $request->input('transaction_id') ?: $request->input('ref_id');
+            $message = $request->input('message') ? (string) $request->input('message') : 'Payment unsuccessful or cancelled';
         }
 
         return [
             'is_valid' => ($status === 'success'),
             'status' => $status,
-            'order_number' => $orderNumber,
+            'order_number' => $orderNumber ? (string) $orderNumber : null,
             'transaction_id' => $transactionId,
-            'message' => $message,
-            'raw_payload' => $request->all(),
+            'message' => mb_substr($message, 0, 200),
         ];
+    }
+
+    /**
+     * Check WebXpay's RSA signature over the decoded payment string.
+     */
+    protected function isValidSignature(string $paymentData, string $signature): bool
+    {
+        if (empty($this->publicKey)) {
+            Log::error('WebXpay callback cannot be verified: WEBXPAY_PUBLIC_KEY is not configured.');
+            return false;
+        }
+
+        $key = @openssl_pkey_get_public($this->formatPublicKey($this->publicKey));
+        if (!$key) {
+            Log::error('WebXpay public key is invalid: ' . openssl_error_string());
+            return false;
+        }
+
+        // WebXpay signs by encrypting the payment string with its private key.
+        $decrypted = '';
+        if (@openssl_public_decrypt($signature, $decrypted, $key) && hash_equals($paymentData, $decrypted)) {
+            return true;
+        }
+
+        return @openssl_verify($paymentData, $signature, $key, OPENSSL_ALGO_SHA256) === 1;
     }
 
     /**

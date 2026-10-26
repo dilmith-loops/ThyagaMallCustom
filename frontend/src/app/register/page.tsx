@@ -43,8 +43,8 @@ function RegisterForm() {
       setError('Please provide a valid email address.');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
     if (password !== passwordConfirmation) {
@@ -194,9 +194,9 @@ function RegisterForm() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:outline-hidden focus:bg-white focus:border-[#36135d] focus:ring-2 focus:ring-[#36135d]/10 transition"
                 />
                 <button
@@ -225,7 +225,7 @@ function RegisterForm() {
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   placeholder="Repeat your password"
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:outline-hidden focus:bg-white focus:border-[#36135d] focus:ring-2 focus:ring-[#36135d]/10 transition"
                 />
               </div>

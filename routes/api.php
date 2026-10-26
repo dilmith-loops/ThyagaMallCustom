@@ -36,7 +36,9 @@ Route::get('/health', function () {
     try {
         $dbStatus = \Illuminate\Support\Facades\DB::connection()->getPdo() ? 'connected' : 'disconnected';
     } catch (\Throwable $e) {
-        $dbStatus = 'error: ' . $e->getMessage();
+        // Don't reveal driver/paths/credentials publicly — details go to the log.
+        report($e);
+        $dbStatus = 'error';
     }
     return response()->json([
         'status' => 'ok',
@@ -45,13 +47,13 @@ Route::get('/health', function () {
 });
 
 // Public Customer Authentication
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('/register', [CustomerAuthController::class, 'register']);
     Route::post('/login', [CustomerAuthController::class, 'login']);
 });
 
 // Authenticated Customer Endpoints
-Route::middleware(['auth:sanctum'])->prefix('user')->group(function () {
+Route::middleware(['auth:sanctum', 'customer'])->prefix('user')->group(function () {
     Route::get('/me', [CustomerAuthController::class, 'me']);
     Route::get('/orders', [CustomerAuthController::class, 'orders']);
     Route::post('/logout', [CustomerAuthController::class, 'logout']);
@@ -71,10 +73,10 @@ Route::prefix('products')->group(function () {
 
 Route::get('/flash-sale/active', [FlashSaleController::class, 'active']);
 
-Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
+Route::post('/vouchers/apply', [VoucherController::class, 'apply'])->middleware('throttle:20,1');
 
 // Thyāga Gift Voucher Endpoints
-Route::prefix('vouchers/thyaga')->group(function () {
+Route::prefix('vouchers/thyaga')->middleware('throttle:10,1')->group(function () {
     Route::get('/health', [ThyagaVoucherController::class, 'health']);
     Route::get('/details/{code}', [ThyagaVoucherController::class, 'details']);
     Route::post('/initiate', [ThyagaVoucherController::class, 'initiate']);
@@ -82,24 +84,24 @@ Route::prefix('vouchers/thyaga')->group(function () {
     Route::post('/cancel', [ThyagaVoucherController::class, 'cancel']);
 });
 
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1');
 
 Route::prefix('orders')->group(function () {
-    Route::post('/', [OrderController::class, 'store']);
-    Route::get('/{order_number}', [OrderController::class, 'show']);
+    Route::post('/', [OrderController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/{order_number}', [OrderController::class, 'show'])->middleware('throttle:30,1');
 });
 
 // WebXpay Payment Gateway Endpoints
 Route::prefix('payment/webxpay')->group(function () {
-    Route::post('/initiate/{order_number}', [WebxpayController::class, 'initiate']);
+    Route::post('/initiate/{order_number}', [WebxpayController::class, 'initiate'])->middleware('throttle:10,1');
     Route::match(['get', 'post'], '/callback', [WebxpayController::class, 'callback'])->name('payment.webxpay.callback');
 });
 
 // Admin Authentication (Public)
-Route::post('/admin/login', [AdminAuthController::class, 'login']);
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1');
 
 // Admin Protected Routes
-Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     Route::get('/me', [AdminAuthController::class, 'me']);
     Route::post('/logout', [AdminAuthController::class, 'logout']);
 
@@ -142,11 +144,13 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::put('/users/{id}', [AdminUserController::class, 'update']);
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
 
-    // Administrators Management (admins table)
-    Route::get('/admins', [AdminStaffController::class, 'index']);
-    Route::post('/admins', [AdminStaffController::class, 'store']);
-    Route::put('/admins/{id}', [AdminStaffController::class, 'update']);
-    Route::delete('/admins/{id}', [AdminStaffController::class, 'destroy']);
+    // Administrators Management (admins table) — super admins only
+    Route::middleware('admin:super_admin')->group(function () {
+        Route::get('/admins', [AdminStaffController::class, 'index']);
+        Route::post('/admins', [AdminStaffController::class, 'store']);
+        Route::put('/admins/{id}', [AdminStaffController::class, 'update']);
+        Route::delete('/admins/{id}', [AdminStaffController::class, 'destroy']);
+    });
 
     // Activity Logs
     Route::get('/activity-logs', [AdminActivityLogController::class, 'index']);

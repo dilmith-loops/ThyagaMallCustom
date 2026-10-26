@@ -27,6 +27,12 @@ class AdminAuthController extends Controller
             ]);
         }
 
+        if ($admin->status !== 'active') {
+            throw ValidationException::withMessages([
+                'email' => ['This administrator account is not active.'],
+            ]);
+        }
+
         $admin->update(['last_login_at' => now()]);
         $token = $admin->createToken('admin-token', ['admin'])->plainTextToken;
 

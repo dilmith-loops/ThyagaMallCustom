@@ -25,6 +25,7 @@ import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductCard from '@/components/product/ProductCard';
+import { sanitizeHtml } from '@/utils/sanitizeHtml';
 
 export default function ProductClient() {
   const params = useParams();
@@ -214,7 +215,7 @@ export default function ProductClient() {
               <div className="flex items-center text-amber-500">
                 <Star className="w-4 h-4 fill-current" />
                 <span className="font-bold text-gray-800 ml-1.5">{product.rating_avg}</span>
-                <span className="text-gray-400 ml-1">({product.reviews_count || 18} Customer Reviews)</span>
+                <span className="text-gray-400 ml-1">({product.reviews_count ?? 0} Customer Reviews)</span>
               </div>
               <span className="text-gray-300">|</span>
               <div>
@@ -374,20 +375,27 @@ export default function ProductClient() {
                 : 'border-transparent text-gray-500 hover:text-gray-900'
             }`}
           >
-            Customer Reviews ({product.reviews_count || 18})
+            Customer Reviews ({product.reviews_count ?? 0})
           </button>
         </div>
 
         <div className="p-6 text-sm text-gray-700 leading-relaxed">
           {activeTab === 'desc' && (
             <div className="space-y-4">
-              <p className="text-xs sm:text-sm text-gray-600">
-                {product.short_description || product.description || 'High quality authentic product sourced and distributed by Thyaga Mall.'}
-              </p>
-              {product.description && product.description !== product.short_description && (
+              {product.short_description || product.description ? (
+                <div
+                  className="prose prose-xs sm:prose-sm text-gray-600 max-w-none text-xs sm:text-sm"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.short_description || product.description || '') }}
+                />
+              ) : (
+                <p className="text-xs sm:text-sm text-gray-600">
+                  High quality authentic product sourced and distributed by Thyaga Mall.
+                </p>
+              )}
+              {product.short_description && product.description && product.description !== product.short_description && (
                 <div
                   className="prose prose-xs sm:prose-sm text-gray-600 max-w-none pt-4 border-t border-gray-100"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
                 />
               )}
             </div>
@@ -416,44 +424,18 @@ export default function ProductClient() {
 
           {activeTab === 'reviews' && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <div className="text-3xl font-black text-gray-900">{product.rating_avg}</div>
-                <div>
-                  <div className="flex text-amber-500 mb-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-500">Based on 18 verified customer ratings across Sri Lanka</span>
+              {product.reviews_count ? (
+                <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <div className="text-3xl font-black text-gray-900">{product.rating_avg}</div>
+                  <span className="text-xs text-gray-500">
+                    Based on {product.reviews_count} customer rating{product.reviews_count === 1 ? '' : 's'}
+                  </span>
                 </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="p-3 border border-gray-100 rounded-lg text-xs space-y-1">
-                  <div className="flex justify-between font-bold text-gray-800">
-                    <span>Kasun Perera</span>
-                    <span className="text-gray-400 font-normal">2 days ago</span>
-                  </div>
-                  <div className="flex text-amber-500">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-600">Great quality product! Redeemed my Thyaga voucher easily and received the package in 2 days.</p>
+              ) : (
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
+                  No reviews yet for this product.
                 </div>
-                <div className="p-3 border border-gray-100 rounded-lg text-xs space-y-1">
-                  <div className="flex justify-between font-bold text-gray-800">
-                    <span>Shenali De Silva</span>
-                    <span className="text-gray-400 font-normal">1 week ago</span>
-                  </div>
-                  <div className="flex text-amber-500">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-600">Completely genuine item as described on the website. Very happy with the purchase.</p>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>

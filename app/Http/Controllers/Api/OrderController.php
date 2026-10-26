@@ -9,8 +9,10 @@ use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -25,10 +27,11 @@ class OrderController extends Controller
             'shipping_postal_code' => 'nullable|string|max:20',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|integer|min:1|max:100',
             'voucher_code' => 'nullable|string',
             'voucher_redemption_id' => 'nullable|string',
             'voucher_owner_name' => 'nullable|string',
+            // Ignored: the voucher amount is taken from the server-side hold record.
             'voucher_amount' => 'nullable|numeric|min:0',
             'payment_method' => 'required|string|in:cod,card,webxpay,voucher,voucher_cod',
             'notes' => 'nullable|string',
@@ -40,6 +43,18 @@ class OrderController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $product = Product::with('images')->lockForUpdate()->findOrFail($item['product_id']);
+
+                if (!$product->is_active) {
+                    throw ValidationException::withMessages([
+                        'items' => ["\"{$product->name}\" is no longer available."],
+                    ]);
+                }
+
+                if ($product->stock_quantity < $item['quantity']) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Only {$product->stock_quantity} of \"{$product->name}\" left in stock."],
+                    ]);
+                }
                 $price = $product->sale_price ?: $product->regular_price;
                 $lineTotal = $price * $item['quantity'];
                 $subtotal += $lineTotal;
@@ -69,17 +84,19 @@ class OrderController extends Controller
             $thyagaService = app(\App\Services\ThyagaVoucherService::class);
 
             if ($redemptionId) {
-                // If Thyāga API is configured, validate the hold status is still OK
-                if ($thyagaService->isConfigured()) {
-                    $isHoldValid = $thyagaService->validateHoldStatus($redemptionId);
-                    if (!$isHoldValid) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'The Thyāga voucher hold has expired or is invalid. Please re-verify your voucher.',
-                        ], 422);
-                    }
+                // The discount must come from a hold this server verified via OTP —
+                // never from an amount supplied by the browser. Each hold is single-use.
+                $heldAmount = Cache::pull(ThyagaVoucherController::holdCacheKey($redemptionId));
+
+                if (!$thyagaService->isConfigured()
+                    || $heldAmount === null
+                    || !$thyagaService->validateHoldStatus($redemptionId)) {
+                    throw ValidationException::withMessages([
+                        'voucher_redemption_id' => ['The Thyāga voucher hold has expired or is invalid. Please re-verify your voucher.'],
+                    ]);
                 }
-                $discount = min($subtotal + $shippingFee, (float) ($validated['voucher_amount'] ?? 0));
+
+                $discount = min($subtotal + $shippingFee, (float) $heldAmount);
                 $voucherCode = $validated['voucher_code'] ?? 'THYAGA-VOUCHER';
             } elseif (!empty($validated['voucher_code'])) {
                 $voucher = Voucher::where('code', strtoupper(trim($validated['voucher_code'])))->first();
@@ -91,14 +108,17 @@ class OrderController extends Controller
             }
 
             $total = max(0, ($subtotal - $discount) + $shippingFee);
-            $orderNumber = 'THY-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+            // Long random suffix so order numbers (which unlock order details) can't be guessed.
+            do {
+                $orderNumber = 'THY-' . date('Ymd') . '-' . strtoupper(Str::random(10));
+            } while (Order::where('order_number', $orderNumber)->exists());
 
-            $userId = auth('sanctum')->id();
-            if (!$userId) {
-                $userId = \App\Models\User::where('email', strtolower(trim($validated['customer_email'])))
-                    ->where('role', 'customer')
-                    ->value('id');
-            }
+            // Only link the order to an account when that customer is actually signed in.
+            // (Emails are unverified, so matching guest orders by email would leak them.)
+            $authUser = auth('sanctum')->user();
+            $userId = $authUser instanceof \App\Models\User && $authUser->role === 'customer'
+                ? $authUser->id
+                : null;
 
             $isOnlinePayment = in_array($validated['payment_method'], ['card', 'webxpay']) && $total > 0;
             $paymentStatus = ($validated['payment_method'] === 'voucher' && $total == 0) ? 'paid' : 'pending';

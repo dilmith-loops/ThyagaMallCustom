@@ -104,7 +104,7 @@ export default function ProductCard({ product, flashPrice }: ProductCardProps) {
                 <Star className="w-3.5 h-3.5 fill-current" />
                 <span className="text-xs font-bold text-gray-800 ml-1">{product.rating_avg}</span>
               </div>
-              <span className="text-[11px] text-gray-400">({product.reviews_count || 12})</span>
+              <span className="text-[11px] text-gray-400">({product.reviews_count ?? 0})</span>
             </div>
           </div>
 

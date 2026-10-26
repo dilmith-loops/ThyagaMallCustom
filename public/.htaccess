@@ -1,4 +1,5 @@
 DirectoryIndex index.html index.php
+ErrorDocument 404 /ThyagaMall/404.html
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
@@ -40,10 +41,10 @@ DirectoryIndex index.html index.php
     RewriteCond %{REQUEST_FILENAME}.html -f
     RewriteRule ^(.*)$ $1.html [L]
 
-    # 6. Fallback to 404 page
+    # 6. Anything else is a real 404 (served with the 404 page via ErrorDocument)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^.*$ 404.html [L]
+    RewriteRule ^ - [R=404,L]
 </IfModule>
 
 # Caching for static assets
@@ -64,4 +65,7 @@ DirectoryIndex index.html index.php
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>

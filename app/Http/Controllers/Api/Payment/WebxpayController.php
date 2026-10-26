@@ -74,6 +74,11 @@ class WebxpayController extends Controller
             return redirect()->away($fallbackUrl);
         }
 
+        // Already settled (e.g. gateway retried the callback) — don't process twice.
+        if ($order->payment_status === 'paid') {
+            return redirect()->away($this->webxpayService->getFrontendRedirectUrl($order->order_number, true));
+        }
+
         if ($result['is_valid'] && $result['status'] === 'success') {
             $order->update([
                 'payment_status' => 'paid',
@@ -93,10 +98,9 @@ class WebxpayController extends Controller
             return redirect()->away($successUrl);
         }
 
-        // Handle failed or cancelled payment
-        $order->update([
-            'notes' => trim(($order->notes ? $order->notes . "\n" : '') . "[WebXpay Payment Failed: {$result['message']}]"),
-        ]);
+        // Failed, cancelled or unverifiable payment — leave the order untouched
+        // (unsigned requests are attacker-controllable, so don't write their text to the order).
+        Log::warning('WebXpay payment not confirmed', ['order_number' => $order->order_number, 'message' => $result['message']]);
 
         $failedUrl = $this->webxpayService->getFrontendRedirectUrl($order->order_number, false, $result['message']);
         return redirect()->away($failedUrl);

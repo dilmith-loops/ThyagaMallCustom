@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'customer' => \App\Http\Middleware\EnsureCustomer::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
             'payment/*',
@@ -28,14 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            return response()->json([
-                'error' => true,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'class' => get_class($e),
-                'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
-            ], 500);
-        });
+        // API errors are always JSON with their real status code (404, 422, ...).
+        // Laravel only includes file paths / stack traces when APP_DEBUG=true.
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson()
+        );
     })->create();

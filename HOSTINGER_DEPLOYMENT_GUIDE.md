@@ -124,8 +124,8 @@ Open your browser and test:
 
 6. **Admin Portal**:
    👉 `https://ai.loopsintegrated.co/ThyagaMall/thyaga-portal-admin/login`
-   - **Admin Email**: `admin@thyaga.lk`
-   - **Password**: `password123`
+   - Sign in with your administrator account. If the database still has the seeded default
+     password, change it immediately (Admin Portal → Administrators).
 
 ---
 

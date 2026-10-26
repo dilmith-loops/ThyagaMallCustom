@@ -52,9 +52,8 @@ Crafted with authentic Thyaga brand aesthetics (**Deep Royal Plum `#36135D`**, *
 ### 🛡️ Admin Portal (`/admin`)
 - **Secure Admin Authentication (`/admin/login`)**:
   - Protected with Laravel Sanctum API tokens.
-  - Pre-configured administrator:
-    - **Email**: `admin@thyaga.lk`
-    - **Password**: `password123`
+  - The default administrator (`admin@thyaga.lk`) is created by `php artisan thyaga:import-catalog`
+    with a random password printed once in the console.
 - **Dashboard Overview (`/admin/dashboard`)**:
   - Real-time KPI metric cards (Total Sales, Total Orders, Pending Orders, Low Stock Alerts, Active Flash Deals).
   - Recent orders quick-view table.

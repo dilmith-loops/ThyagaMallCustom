@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '@/services/api';
 import { getAssetUrl } from '@/utils/assets';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@thyaga.lk');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,17 +60,6 @@ export default function AdminLoginPage() {
           <p className="text-xs text-gray-500">
             Secure administrative control center for store operations, inventory & flash sales
           </p>
-        </div>
-
-        {/* Demo Credentials Box */}
-        <div className="bg-purple-50/80 border border-purple-200 rounded-xl p-3 text-xs text-purple-900 space-y-1">
-          <div className="font-bold flex items-center gap-1.5 text-[#36135d]">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Pre-configured Admin Access:</span>
-          </div>
-          <div className="text-[11px] text-purple-800">
-            Email: <code>admin@thyaga.lk</code> | Password: <code>password123</code>
-          </div>
         </div>
 
         {error && (

@@ -290,7 +290,7 @@ class ThyagaVoucherService
     public function validateHoldStatus(string $redemptionId): bool
     {
         try {
-            $result = $this->request($redemptionId . '/validateStatus', 'GET');
+            $result = $this->request(rawurlencode($redemptionId) . '/validateStatus', 'GET');
             if ($result['success']) {
                 $status = strtoupper($result['data']['status'] ?? '');
                 return ($status === 'OK' || $status === 'PROCESSING');

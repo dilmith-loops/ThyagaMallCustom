@@ -23,17 +23,22 @@ class ImportThyagaCatalog extends Command
     {
         $this->info('Starting Thyaga Mall Catalog Import & Seeding...');
 
-        // 1. Create or Update Default Admin
-        $admin = Admin::updateOrCreate(
-            ['email' => 'admin@thyaga.lk'],
-            [
+        // 1. Create the default admin only if missing — never reset an existing password.
+        $admin = Admin::where('email', 'admin@thyaga.lk')->first();
+        if (!$admin) {
+            $initialPassword = \Illuminate\Support\Str::password(16);
+            $admin = Admin::create([
+                'email' => 'admin@thyaga.lk',
                 'name' => 'Thyaga Mall Admin',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($initialPassword),
                 'role' => 'super_admin',
+                'status' => 'active',
                 'avatar' => 'https://ui-avatars.com/api/?name=Thyaga+Admin&background=36135d&color=fff',
-            ]
-        );
-        $this->info("Admin created: admin@thyaga.lk / password123");
+            ]);
+            $this->warn("Admin created: admin@thyaga.lk / {$initialPassword}  (shown once — store it securely)");
+        } else {
+            $this->info('Admin admin@thyaga.lk already exists — password left unchanged.');
+        }
 
         // 2. Create Vouchers
         Voucher::updateOrCreate(

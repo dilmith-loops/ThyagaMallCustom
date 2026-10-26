@@ -21,7 +21,7 @@ class CustomerAuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:30',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user = User::create([
@@ -110,9 +110,7 @@ class CustomerAuthController extends Controller
     {
         $user = $request->user();
 
-        $ordersCount = Order::where('user_id', $user->id)
-            ->orWhere('customer_email', $user->email)
-            ->count();
+        $ordersCount = Order::where('user_id', $user->id)->count();
 
         return response()->json([
             'success' => true,
@@ -137,10 +135,7 @@ class CustomerAuthController extends Controller
         $user = $request->user();
 
         $orders = Order::with('items')
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('customer_email', $user->email);
-            })
+            ->where('user_id', $user->id)
             ->latest()
             ->paginate(10);
 
