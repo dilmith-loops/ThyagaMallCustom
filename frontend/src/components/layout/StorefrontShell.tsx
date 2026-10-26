@@ -9,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 import BottomNavBar from '@/components/layout/BottomNavBar';
 import CartDrawer from '@/components/cart/CartDrawer';
 import Toast from '@/components/common/Toast';
+import ScrollProgress from '@/components/motion/ScrollProgress';
 
 export default function StorefrontShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export default function StorefrontShell({ children }: { children: React.ReactNod
 
   return (
     <>
+      <ScrollProgress />
       <TopBar />
       <Header />
       <Navbar />

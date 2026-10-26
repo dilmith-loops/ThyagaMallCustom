@@ -14,6 +14,7 @@ import TopBrands from '@/components/home/TopBrands';
 import BestSellersSection from '@/components/home/BestSellersSection';
 import AppDownloadAndTrust from '@/components/home/AppDownloadAndTrust';
 import NewsletterBar from '@/components/home/NewsletterBar';
+import { Reveal } from '@/components/motion/Reveal';
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -40,31 +41,49 @@ export default function HomePage() {
       <HeroBanner categories={categories} />
 
       {/* 2. 12 Quick Category Circular Badges */}
-      <QuickCategoryIcons />
+      <Reveal>
+        <QuickCategoryIcons />
+      </Reveal>
 
       {/* 3. ⚡ Flash Deals Section with Real-Time Countdown & Sold Bars (Strictly hidden when turned off in Admin) */}
-      {isActive && flashSale && <FlashSaleSection flashSale={flashSale} />}
+      {isActive && flashSale && (
+        <Reveal>
+          <FlashSaleSection flashSale={flashSale} />
+        </Reveal>
+      )}
 
       {/* 4. Trending Right Now 🔥 Product Carousel/Grid */}
-      <TrendingSection />
+      <Reveal>
+        <TrendingSection />
+      </Reveal>
 
       {/* 5. Shop by Category Pastel Showcase Tiles */}
-      <CategoryTiles />
+      <Reveal>
+        <CategoryTiles />
+      </Reveal>
 
       {/* 6. Dual Split Promo Banners (Smarter Tech & Fashion New Collection) */}
       <DualPromoBanners />
 
       {/* 7. Top Brands You Love Badges Bar */}
-      <TopBrands />
+      <Reveal>
+        <TopBrands />
+      </Reveal>
 
       {/* 8. Best Sellers with Filter Tabs (All, Electronics, Home, Fashion, Beauty) */}
-      <BestSellersSection />
+      <Reveal>
+        <BestSellersSection />
+      </Reveal>
 
       {/* 9. Value Badges & Mobile App Download Showcase */}
-      <AppDownloadAndTrust />
+      <Reveal>
+        <AppDownloadAndTrust />
+      </Reveal>
 
       {/* 10. Newsletter Subscription Bar with Social Media Links */}
-      <NewsletterBar />
+      <Reveal>
+        <NewsletterBar />
+      </Reveal>
     </div>
   );
 }

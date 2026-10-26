@@ -53,3 +53,113 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 2s infinite ease-in-out;
 }
+
+/* ============================================================
+   Revamp motion system
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hero aurora glows drift slowly behind the 3D scene */
+@keyframes aurora-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, 30px) scale(1.15); }
+  66% { transform: translate(-20px, 50px) scale(0.92); }
+}
+.hero-aurora { animation: aurora-drift 14s ease-in-out infinite; }
+.hero-aurora-2 { animation: aurora-drift 18s ease-in-out infinite reverse; }
+
+/* Slow rotation for the discount rosette */
+@keyframes badge-spin { to { transform: rotate(360deg); } }
+.badge-spin { animation: badge-spin 22s linear infinite; transform-origin: center; }
+
+/* Active hero dot fills over the slide duration */
+@keyframes hero-progress { from { width: 0%; } to { width: 100%; } }
+.hero-progress { animation-name: hero-progress; animation-timing-function: linear; animation-fill-mode: forwards; }
+
+/* Light sweep across CTA buttons on hover */
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.65) 50%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.btn-shine:hover::after { transition: transform 0.7s ease; transform: translateX(120%); }
+
+/* Floating confetti specks */
+@keyframes confetti-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+  50% { transform: translateY(-10px) rotate(180deg); opacity: 0.5; }
+}
+.confetti { animation: confetti-float 3.4s ease-in-out infinite; }
+.confetti-2 { animation-duration: 4.2s; animation-delay: -1.2s; }
+.confetti-3 { animation-duration: 5s; animation-delay: -2.4s; }
+
+/* Delivery truck drives through its badge */
+@keyframes truck-drive {
+  0% { transform: translateX(-140%); }
+  35%, 65% { transform: translateX(0); }
+  100% { transform: translateX(140%); }
+}
+.truck-drive { animation: truck-drive 3.6s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+
+/* Infinite brand marquee */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee-track { animation: marquee 32s linear infinite; }
+.marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+
+/* Animated gradient text for section headings */
+@keyframes gradient-pan { to { background-position: 200% center; } }
+.text-gradient-anim {
+  background: linear-gradient(90deg, #36135d, #a7144c, #f59e0b, #a7144c, #36135d);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 6s linear infinite;
+}
+
+/* Rotating conic border glow (used on promo banners) */
+@property --glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes glow-rotate { to { --glow-angle: 360deg; } }
+.glow-border { position: relative; }
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  z-index: 25;
+  background: conic-gradient(from var(--glow-angle), transparent 0deg, #f59e0b 60deg, #ec4899 120deg, transparent 180deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: glow-rotate 4s linear infinite;
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.glow-border:hover::before { opacity: 1; }
+
+/* Gentle bob for floating decorative elements */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.float-y { animation: float-y 4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { api } from '@/services/api';
 import { Product } from '@/types';
 import ProductCard from '@/components/product/ProductCard';
+import { Stagger, StaggerItem } from '@/components/motion/Reveal';
 
 export default function TrendingSection() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -43,10 +44,10 @@ export default function TrendingSection() {
       {/* Header */}
       <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <span className="text-lg">💥</span>
+          <span className="text-lg float-y inline-block">💥</span>
           <h2 className="text-base sm:text-lg font-black text-gray-900 tracking-tight font-poppins flex items-center gap-1.5">
-            <span>Trending Right Now</span>
-            <span>🔥</span>
+            <span className="text-gradient-anim">Trending Right Now</span>
+            <span className="inline-block animate-bounce">🔥</span>
           </h2>
         </div>
 
@@ -60,9 +61,9 @@ export default function TrendingSection() {
       </div>
 
       {/* Grid of 6 items */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
-        {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => (
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+          {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
                 className="bg-white rounded-xl border border-gray-200/80 p-3 flex flex-col justify-between animate-pulse aspect-[3/4]"
@@ -74,11 +75,17 @@ export default function TrendingSection() {
                   <div className="h-4 bg-gray-100 rounded w-1/2 mt-2" />
                 </div>
               </div>
-            ))
-          : products.map((product) => (
-              <ProductCard key={product.id} product={product} />
             ))}
-      </div>
+        </div>
+      ) : (
+        <Stagger className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+          {products.map((product) => (
+            <StaggerItem key={product.id} className="h-full">
+              <ProductCard product={product} />
+            </StaggerItem>
+          ))}
+        </Stagger>
+      )}
     </section>
   );
 }

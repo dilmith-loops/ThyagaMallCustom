@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Flame,
   Smartphone,
@@ -33,26 +34,41 @@ const ICONS = [
 ];
 
 export default function QuickCategoryIcons() {
+  const reduce = useReducedMotion();
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-2xs py-4 px-2 my-4 overflow-x-auto">
       <div className="flex items-center justify-between min-w-[760px] gap-2 px-2">
-        {ICONS.map((item) => {
+        {ICONS.map((item, idx) => {
           const Icon = item.icon;
           return (
-            <Link
+            <motion.div
               key={item.label}
-              href={`/${item.slug}`}
-              className="flex flex-col items-center gap-1.5 text-center group cursor-pointer flex-1"
+              className="flex-1"
+              initial={reduce ? false : { opacity: 0, y: 20, scale: 0.6 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: 'spring', stiffness: 260, damping: 16, delay: idx * 0.04 }}
             >
-              <div
-                className={`w-11 h-11 rounded-full ${item.bg} flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-2xs`}
+            <Link
+              href={`/${item.slug}`}
+              className="flex flex-col items-center gap-1.5 text-center group cursor-pointer"
+            >
+              <motion.div
+                whileHover={{ y: -6, rotate: [0, -12, 10, -6, 0], scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.5 }}
+                className={`relative w-11 h-11 rounded-full ${item.bg} flex items-center justify-center shadow-2xs group-hover:shadow-lg transition-shadow`}
               >
-                <Icon className={`w-5 h-5 ${item.text}`} />
-              </div>
+                {/* Pulsing ring on hover */}
+                <span aria-hidden className={`absolute inset-0 rounded-full ${item.bg} opacity-0 group-hover:opacity-100 group-hover:animate-ping`} />
+                <Icon className={`relative w-5 h-5 ${item.text}`} />
+              </motion.div>
               <span className="text-[11px] font-semibold text-gray-700 group-hover:text-[#36135d] transition whitespace-nowrap">
                 {item.label}
               </span>
             </Link>
+            </motion.div>
           );
         })}
       </div>
