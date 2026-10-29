@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import {
@@ -13,6 +13,7 @@ import {
   ContactShadows,
   PerformanceMonitor,
 } from '@react-three/drei';
+import { getAssetUrl } from '@/utils/assets';
 
 export interface HeroSceneProps {
   /** Main gift box colour — changes per hero slide */
@@ -40,6 +41,80 @@ function useColorLerp(target: string) {
     ref.current?.color.lerp(goal, Math.min(1, delta * 3));
   });
   return [ref, initial] as const;
+}
+
+const LABEL_WIDTH = 1.12;
+const LABEL_HEIGHT = LABEL_WIDTH * (560 / 1024);
+// Just outside the gold ribbon (1.62 deep) so the label sits on top of it like a brand tag.
+const LABEL_OFFSET = 0.826;
+const LABEL_FACES: { position: [number, number, number]; rotationY: number }[] = [
+  { position: [0, 0, LABEL_OFFSET], rotationY: 0 },
+  { position: [LABEL_OFFSET, 0, 0], rotationY: Math.PI / 2 },
+  { position: [0, 0, -LABEL_OFFSET], rotationY: Math.PI },
+  { position: [-LABEL_OFFSET, 0, 0], rotationY: -Math.PI / 2 },
+];
+
+// Draws the Thyaga Mall logo onto a white rounded label so it stays readable on any box colour.
+function useLogoLabelTexture(): THREE.CanvasTexture | null {
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+    let created: THREE.CanvasTexture | null = null;
+    const image = new Image();
+
+    image.onload = () => {
+      if (disposed) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 560;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(8, 8, canvas.width - 16, canvas.height - 16, 72);
+      ctx.fill();
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = '#f5c04a';
+      ctx.stroke();
+
+      const padding = 90;
+      const scale = Math.min((canvas.width - padding * 2) / image.width, (canvas.height - padding * 2) / image.height);
+      const width = image.width * scale;
+      const height = image.height * scale;
+      ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+
+      created = new THREE.CanvasTexture(canvas);
+      created.colorSpace = THREE.SRGBColorSpace;
+      created.anisotropy = 8;
+      setTexture(created);
+    };
+    image.src = getAssetUrl('/logo.png');
+
+    return () => {
+      disposed = true;
+      created?.dispose();
+    };
+  }, []);
+
+  return texture;
+}
+
+function LogoLabels() {
+  const texture = useLogoLabelTexture();
+  if (!texture) return null;
+
+  return (
+    <>
+      {LABEL_FACES.map(({ position, rotationY }) => (
+        <mesh key={rotationY} position={position} rotation={[0, rotationY, 0]}>
+          <planeGeometry args={[LABEL_WIDTH, LABEL_HEIGHT]} />
+          <meshStandardMaterial map={texture} emissiveMap={texture} emissive="#ffffff" emissiveIntensity={0.35} transparent roughness={0.45} metalness={0} polygonOffset polygonOffsetFactor={-2} />
+        </mesh>
+      ))}
+    </>
+  );
 }
 
 function GiftBox({ color }: { color: string }) {
@@ -70,6 +145,8 @@ function GiftBox({ color }: { color: string }) {
         <boxGeometry args={[1.62, 1.27, 0.3]} />
         <GoldMaterial />
       </mesh>
+      {/* Thyaga Mall branding on every side */}
+      <LogoLabels />
 
       {/* Lid + bow */}
       <group ref={lid} position={[0, 0.78, 0]}>
